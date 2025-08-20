@@ -1,4 +1,3 @@
-```
 # Food Delivery System with Microservices using Spring Boot
 
 ## Overview
@@ -251,11 +250,5 @@ Feel free to fork this repo, raise issues, submit pull requests, or reach out fo
 [Specify your license here, e.g., MIT License]
 
 ---
-
-## Contact
-
-Project Maintainer: [Your Name / Contact Info]
-
-```
 
 ***
