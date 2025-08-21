@@ -1,110 +1,94 @@
-package io.example.reservation;
+package com.deliverysystem.orderservice.model;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-
-import static java.util.Objects.requireNonNull;
-import static lombok.AccessLevel.PRIVATE;
 
 @Entity
 @Table(name = "orders")
 public class Order {
+
     @Id
-    private final OrderIdentifier id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    private Long orderId;
-    private Long customerId;
+    private String name;
+    private Integer qty;
+    private String description;
+
+    private String customerName;
+    private String address;
     private LocalDate orderDate;
+    private Double totalCost;
 
-    @Enumerated(EnumType.STRING)
-    private Status status;
+    public Order() {}
 
-    public Float price;
-    public Long paymentDue;
-    @ManyToMany
-    @JoinTable(
-            name = "order_inventory",
-            joinColumns = @JoinColumn(name = "order_id"),
-            inverseJoinColumns = @JoinColumn(name = "inventory_id")
-    )
-    private Set<Food> foods;
-    public String location;
-
-    @Builder
-    public Order(Long orderId,
-                       Long customerId,
-                       LocalDate orderDate,
-                       Status status,
-                       Float price,
-                       Long paymentDue,
-                       Set<Food> foods,
-                        String location) {
-        this.orderId = requireNonNull(orderId, "orderId cannot be null");
-        this.customerId = requireNonNull(customerId, "userId cannot be null");
-        this.orderDate = requireNonNull(orderDate, "orderDate cannot be null");
-        this.status = requireNonNull(status, "status cannot be null");
-        this.price = requireNonNull(price, "price cannot be null");
-        this.paymentDue = requireNonNull(paymentDue, "paymentDue cannot be null");
-        this.foods = requireNonNull(foods, "foods cannot be null");
+    public Order(String name, Integer qty, String description, String customerName, String address, LocalDate orderDate, Double totalCost) {
+        this.name = name;
+        this.qty = qty;
+        this.description = description;
+        this.customerName = customerName;
+        this.address = address;
+        this.orderDate = orderDate;
+        this.totalCost = totalCost;
     }
 
-    public OrderIdentifier id() {
-        return id;
+    // Getters & setters
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getName() {
+        return name;
     }
 
-    public Status status() {
-        return status;
+    public String getDescription() {
+        return description;
     }
 
-    public Long hotelId() {
-        return hotelId;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public Long roomId() {
-        return roomId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public Long guestId() {
-        return guestId;
+    public String getCustomerName() {
+        return customerName;
     }
 
-    public void markSucceed() {
-        this.status = Status.SUCCEED;
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
-    public void markFailed() {
-        this.status = Status.FAILED;
+    public String getAddress() {
+        return address;
     }
 
-    @Embeddable
-    public record ReservationIdentifier(UUID id) implements Serializable {
-
-        public String toString() {
-            return id.toString();
-        }
+    public void setAddress(String address) {
+        this.address = address;
     }
 
-    public enum Status {
-        PENDING, SUCCEED, FAILED, CANCELED, REFUND
+    public LocalDate getOrderDate() {
+        return orderDate;
     }
 
-    public ObjectNode toSagaPayload() {
-        return new ObjectMapper().createObjectNode()
-                .put("reservationId", id.toString())
-                .put("hotelId", hotelId)
-                .put("roomId", roomId)
-                .put("startDate", startDate.format(DateTimeFormatter.ISO_DATE))
-                .put("endDate", endDate.format(DateTimeFormatter.ISO_DATE))
-                .put("guestId", guestId)
-                .put("paymentDue", paymentDue)
-                .put("creditCardNo", creditCardNo);
+    public void setOrderDate(LocalDate orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    public Double getTotalCost() {
+        return totalCost;
+    }
+
+    public void setTotalCost(Double totalCost) {
+        this.totalCost = totalCost;
+    }
+
+    public Integer getQty() {
+        return qty;
+    }
+
+    public void setQty(Integer qty) {
+        this.qty = qty;
     }
 }

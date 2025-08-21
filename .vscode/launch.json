@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "OrderserviceApplication",
+            "request": "launch",
+            "mainClass": "com.deliverysystem.orderservice.OrderserviceApplication",
+            "projectName": "orderservice"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-InventoryserviceApplication<inventoryservice>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.deliverysystem.inventoryservice.InventoryserviceApplication",
+            "projectName": "inventoryservice",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
