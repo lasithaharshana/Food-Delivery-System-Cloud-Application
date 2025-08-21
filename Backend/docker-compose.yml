@@ -1,17 +1,31 @@
 version: "3.8"
+
 services:
-  mysql:
+  mysql-inventory:
     image: mysql:8.0
-    container_name: mysql-db
+    container_name: mysql-inventory
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: inventorydb
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_inventory_data:/var/lib/mysql
+
+  mysql-order:
+    image: mysql:8.0
+    container_name: mysql-order
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: orderdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_order_data:/var/lib/mysql
 
   inventoryservice:
     build: ./inventoryservice
@@ -19,11 +33,24 @@ services:
     ports:
       - "9093:9093"
     depends_on:
-      - mysql
+      - mysql-inventory
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/inventorydb
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-inventory:3306/inventorydb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+
+  orderservice:
+    build: ./orderservice
+    container_name: orderservice
+    ports:
+      - "9094:9094"
+    depends_on:
+      - mysql-order
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-order:3306/orderdb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
 
 volumes:
-  mysql_data:
+  mysql_inventory_data:
+  mysql_order_data:
