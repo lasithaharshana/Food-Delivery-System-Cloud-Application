@@ -1,14 +1,46 @@
-# Use a lightweight OpenJDK image
-FROM openjdk:21-jdk-slim
+# Multi-stage build for Inventory Service
+FROM maven:3.9.5-eclipse-temurin-21 AS build
 
-# Set working directory inside container
+# Set working directory
+WORKDIR /workspace
+
+# Copy Maven files for dependency caching
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+
+# Copy source code
+COPY src ./src
+
+# Build the application (skip tests for faster builds)
+RUN mvn clean package -DskipTests
+
+# Production stage
+FROM eclipse-temurin:21-jre
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+# Set working directory
 WORKDIR /app
 
-# Copy Maven build output (the jar) into container
-COPY target/inventoryservice-0.0.1-SNAPSHOT.jar app.jar
+# Copy the JAR file from build stage
+COPY --from=build /workspace/target/*.jar app.jar
 
-# Expose application port (Spring Boot default: 8080)
+# Change ownership to non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose application port
 EXPOSE 9093
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9093/actuator/health || exit 1
+
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
