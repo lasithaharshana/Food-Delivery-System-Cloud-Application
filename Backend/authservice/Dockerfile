@@ -1,54 +1,54 @@
-# Use OpenJDK 21 as base image
-FROM openjdk:21-jdk-slim
+# Multi-stage build for Auth Service
+FROM maven:3.9.5-eclipse-temurin-21 AS build
 
 # Set working directory
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy Maven wrapper and pom.xml
-COPY mvnw .
-COPY mvnw.cmd .
+# Copy Maven files for dependency caching
+COPY pom.xml ./
+COPY mvnw ./
+COPY mvnw.cmd ./
 COPY .mvn .mvn
-COPY pom.xml .
 
-# Download dependencies
+# Make sure Maven wrapper is executable
+RUN chmod +x mvnw
+
+# Download dependencies first for better caching
 RUN ./mvnw dependency:go-offline -B
 
 # Copy source code
-COPY src src
+COPY src ./src
 
-# Build the application
-RUN ./mvnw package -DskipTests
+# Build the application (skip tests for faster builds)
+RUN ./mvnw clean package -DskipTests
 
-# Create final image
-FROM openjdk:21-jre-slim
+# Production stage
+FROM eclipse-temurin:21-jre-alpine
 
 # Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S authuser && adduser -u 1001 -S authuser -G authuser
 
 # Set working directory
 WORKDIR /app
 
-# Create non-root user
-RUN groupadd -r authuser && useradd -r -g authuser authuser
+# Copy the JAR file from build stage
+COPY --from=build /workspace/target/*.jar app.jar
 
-# Copy the built jar file
-COPY --from=0 /app/target/*.jar app.jar
-
-# Change ownership of the working directory
-RUN chown -R authuser:authuser /app
+# Change ownership to non-root user
+RUN chown authuser:authuser app.jar
 
 # Switch to non-root user
 USER authuser
 
-# Expose port
+# Expose application port
 EXPOSE 8081
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8081/actuator/health || exit 1
+# Health check with simpler approach
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+    CMD curl -f http://localhost:8081/actuator/health || exit 1
 
-# Set JVM options
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
-
-# Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Run the application with Docker profile and simpler JVM options
+ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-Dspring.profiles.active=docker", "-jar", "app.jar"]

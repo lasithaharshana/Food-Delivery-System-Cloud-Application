@@ -18,7 +18,7 @@ public class AuthserviceApplication {
 		log.info("\n----------------------------------------------------------\n" +
 				"Application '{}' is running! Access URLs:\n" +
 				"Local: \t\thttp://localhost:{}{}\n" +
-				"Swagger UI: \thttp://localhost:{}{}/swagger-ui.html\n" +
+				"Swagger UI: \thttp://localhost:{}{}/docs\n" +
 				"Health Check: \thttp://localhost:{}{}/actuator/health\n" +
 				"----------------------------------------------------------",
 				env.getProperty("spring.application.name"),

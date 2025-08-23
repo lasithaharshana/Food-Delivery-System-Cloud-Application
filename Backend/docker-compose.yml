@@ -1,20 +1,20 @@
 version: "3.8"
 
 services:
-  mysql-customer:
+  mysql-auth:
     image: mysql:8.0
-    container_name: mysql-customer
+    container_name: mysql-auth
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: customer_db
-      MYSQL_USER: customer_user
-      MYSQL_PASSWORD: customer_pass
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: auth_db
+      MYSQL_USER: authuser
+      MYSQL_PASSWORD: authpass
     ports:
-      - "33061:3306"
+      - "33051:3306"
     volumes:
-      - mysql_customer_data:/var/lib/mysql
+      - mysql_auth_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "customer_user", "-pcustomer_pass"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -46,28 +46,28 @@ services:
     volumes:
       - mysql_order_data:/var/lib/mysql
 
-  customerservice:
-    build: ./customerservice
-    container_name: customerservice-app
+  authservice:
+    build: ./authservice
+    container_name: authservice-app
     ports:
-      - "9092:9092"
-    environment:
-      DB_HOST: mysql-customer
-      DB_PORT: 3306
-      DB_NAME: customer_db
-      DB_USER: customer_user
-      DB_PASSWORD: customer_pass
-      SPRING_PROFILES_ACTIVE: docker
+      - "8081:8081"
     depends_on:
-      mysql-customer:
+      mysql-auth:
         condition: service_healthy
     restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/auth_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+      JWT_SECRET: mySecretKey123456789012345678901234567890123456789012345678901234567890
+      JWT_EXPIRATION: 86400000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9092/customers"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
 
   inventoryservice:
     build: ./inventoryservice
@@ -94,6 +94,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
 
 volumes:
-  mysql_customer_data:
+  mysql_auth_data:
   mysql_inventory_data:
   mysql_order_data:
