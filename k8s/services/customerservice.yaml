@@ -16,8 +16,12 @@ spec:
           image: customerservice:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: DB_URL
-              value: jdbc:mysql://customer-mysql:3306/customer_db
+            - name: DB_HOST
+              value: customer-mysql
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: customer_db
             - name: DB_USER
               value: customer_user
             - name: DB_PASSWORD

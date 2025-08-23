@@ -1,0 +1,43 @@
+package com.uuhnaut69.customerservice.config;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+
+@Configuration
+public class SwaggerConfig {
+
+    @Bean
+    public OpenAPI customerServiceOpenAPI() {
+        Server devServer = new Server();
+        devServer.setUrl("http://localhost:9092");
+        devServer.setDescription("Server URL for Customer Service in Development environment");
+
+        Contact contact = new Contact();
+        contact.setEmail("developer@fooddelivery.com");
+        contact.setName("Food Delivery Team");
+        contact.setUrl("https://www.fooddelivery.com");
+
+        License license = new License()
+                .name("MIT License")
+                .url("https://choosealicense.com/licenses/mit/");
+
+        Info info = new Info()
+                .title("Customer Service API")
+                .version("1.0.0")
+                .contact(contact)
+                .description("This API provides endpoints for customer management including authentication, registration, and customer operations.")
+                .termsOfService("https://www.fooddelivery.com/terms")
+                .license(license);
+
+        return new OpenAPI()
+                .info(info)
+                .servers(List.of(devServer));
+    }
+}
