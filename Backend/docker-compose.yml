@@ -1,6 +1,25 @@
 version: "3.8"
 
 services:
+  mysql-customer:
+    image: mysql:8.0
+    container_name: mysql-customer
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: customer_db
+      MYSQL_USER: customer_user
+      MYSQL_PASSWORD: customer_pass
+    ports:
+      - "33061:3306"
+    volumes:
+      - mysql_customer_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "customer_user", "-pcustomer_pass"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   mysql-inventory:
     image: mysql:8.0
     container_name: mysql-inventory
@@ -10,7 +29,7 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:
-      - "3307:3306"
+      - "33071:3306"
     volumes:
       - mysql_inventory_data:/var/lib/mysql
 
@@ -23,27 +42,9 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:
-      - "3308:3306"
+      - "33081:3306"
     volumes:
       - mysql_order_data:/var/lib/mysql
-
-  postgres-customer:
-    image: postgres:15
-    container_name: customerservice-db
-    environment:
-      POSTGRES_DB: customersdb
-      POSTGRES_USER: customerservice
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - postgres_customer_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U customerservice -d customersdb"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   customerservice:
     build: ./customerservice
@@ -51,14 +52,14 @@ services:
     ports:
       - "9092:9092"
     environment:
-      DB_HOST: postgres-customer
-      DB_PORT: 5432
-      DB_NAME: customersdb
-      DB_USER: customerservice
-      DB_PASSWORD: secret
+      DB_HOST: mysql-customer
+      DB_PORT: 3306
+      DB_NAME: customer_db
+      DB_USER: customer_user
+      DB_PASSWORD: customer_pass
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
-      postgres-customer:
+      mysql-customer:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -93,6 +94,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
 
 volumes:
+  mysql_customer_data:
   mysql_inventory_data:
   mysql_order_data:
-  postgres_customer_data:
