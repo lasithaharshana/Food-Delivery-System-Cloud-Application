@@ -1,3 +1,4 @@
+com\uuhnaut69\customerservice\config\SwaggerConfig.class
 com\uuhnaut69\customerservice\controller\AuthController.class
 com\uuhnaut69\customerservice\controller\CustomerController.class
 com\uuhnaut69\customerservice\service\CustomerService.class
