@@ -74,13 +74,16 @@ public class OrderController {
     public Order updateItem(@Parameter(description = "Order ID") @PathVariable Integer id, @RequestBody Order updated) {
         return repo.findById(id)
                 .map(item -> {
-                    item.setName(updated.getName());
-                    item.setDescription(updated.getDescription());
+                    item.setOrderId(updated.getOrderId());
+                    item.setRestaurantId(updated.getRestaurantId());
+                    item.setCustomerId(updated.getCustomerId());
                     item.setCustomerName(updated.getCustomerName());
-                    item.setAddress(updated.getAddress());
-                    item.setOrderDate(updated.getOrderDate());
-                    item.setTotalCost(updated.getTotalCost());
-
+                    item.setCustomerPhoneNumber(updated.getCustomerPhoneNumber());
+                    item.setNote(updated.getNote());
+                    item.setStatus(updated.getStatus());
+                    item.setCost(updated.getCost());
+                    item.setCreatedAt(updated.getCreatedAt());
+                    item.setUpdatedAt(updated.getUpdatedAt());
                     // Clear existing items (orphanRemoval removes them from DB)
                     item.removeOrderItems();
 

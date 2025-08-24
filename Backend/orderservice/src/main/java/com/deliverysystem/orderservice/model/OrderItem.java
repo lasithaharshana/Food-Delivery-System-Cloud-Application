@@ -1,6 +1,7 @@
 package com.deliverysystem.orderservice.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")
@@ -10,23 +11,27 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Integer inventoryItemId;  // Reference to inventory item's ID in Inventory Service
-
-    private Integer quantity;
+    private String itemId;      // UUID from JSON
+    private String name;        // Item name
+    private Integer quantity;   // Quantity ordered
+    private BigDecimal price;   // Price per item
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
 
-    // Constructors, getters, setters
+    // Constructors
     public OrderItem() {}
 
-    public OrderItem(Integer inventoryItemId, Integer quantity, Order order) {
-        this.inventoryItemId = inventoryItemId;
+    public OrderItem(String itemId, String name, Integer quantity, BigDecimal price, Order order) {
+        this.itemId = itemId;
+        this.name = name;
         this.quantity = quantity;
+        this.price = price;
         this.order = order;
     }
 
+    // Getters & Setters
     public Integer getId() {
         return id;
     }
@@ -35,12 +40,20 @@ public class OrderItem {
         this.id = id;
     }
 
-    public Integer getInventoryItemId() {
-        return inventoryItemId;
+    public String getItemId() {
+        return itemId;
     }
 
-    public void setInventoryItemId(Integer inventoryItemId) {
-        this.inventoryItemId = inventoryItemId;
+    public void setItemId(String itemId) {
+        this.itemId = itemId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Integer getQuantity() {
@@ -49,6 +62,14 @@ public class OrderItem {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
     public Order getOrder() {
