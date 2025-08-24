@@ -26,16 +26,16 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     
-    @Value("${cors.allowed.origins}")
+    @Value("${cors.allowed.origins:http://localhost:3000,http://localhost:5173}")
     private String allowedOrigins;
     
-    @Value("${cors.allowed.methods}")
+    @Value("${cors.allowed.methods:GET,POST,PUT,DELETE,PATCH,OPTIONS}")
     private String allowedMethods;
     
-    @Value("${cors.allowed.headers}")
+    @Value("${cors.allowed.headers:*}")
     private String allowedHeaders;
     
-    @Value("${cors.allow.credentials}")
+    @Value("${cors.allow.credentials:true}")
     private boolean allowCredentials;
     
     @Bean
@@ -45,6 +45,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/api/health", "/api/info").permitAll()
                 .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/inventory/**").hasRole("RESTAURANT")

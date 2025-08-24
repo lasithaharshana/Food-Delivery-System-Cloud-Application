@@ -91,9 +91,16 @@ services:
         condition: service_healthy
     restart: unless-stopped
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-inventory:3306/inventorydb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9093/actuator/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
 
   orderservice:
     build: ./orderservice
@@ -103,11 +110,49 @@ services:
     depends_on:
       mysql-order:
         condition: service_healthy
+      authservice:
+        condition: service_healthy
+      inventoryservice:
+        condition: service_healthy
     restart: unless-stopped
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-order:3306/orderdb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9094/actuator/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
+
+  apigateway:
+    build: ./apigateway
+    container_name: apigateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      authservice:
+        condition: service_healthy
+      inventoryservice:
+        condition: service_healthy
+      orderservice:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      JWT_EXPIRATION: 86400000
+      AUTH_SERVICE_URL: http://authservice:8081
+      ORDER_SERVICE_URL: http://orderservice:9094
+      INVENTORY_SERVICE_URL: http://inventoryservice:9093
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 180s
 
 volumes:
   mysql_auth_data:

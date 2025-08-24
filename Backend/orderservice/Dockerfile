@@ -5,23 +5,31 @@ FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /workspace
 
 # Copy Maven files for dependency caching
-COPY pom.xml mvnw ./
+COPY pom.xml ./
+COPY mvnw ./
+COPY mvnw.cmd ./
 COPY .mvn .mvn
+
+# Make sure Maven wrapper is executable
+RUN chmod +x mvnw
+
+# Download dependencies first for better caching
+RUN ./mvnw dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
 
 # Build the application (skip tests for faster builds)
-RUN mvn clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 
 # Production stage
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-alpine
 
 # Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 # Create non-root user for security
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+RUN addgroup -g 1001 -S orderuser && adduser -u 1001 -S orderuser -G orderuser
 
 # Set working directory
 WORKDIR /app
@@ -30,10 +38,10 @@ WORKDIR /app
 COPY --from=build /workspace/target/*.jar app.jar
 
 # Change ownership to non-root user
-RUN chown -R appuser:appgroup /app
+RUN chown orderuser:orderuser app.jar
 
 # Switch to non-root user
-USER appuser
+USER orderuser
 
 # Expose application port
 EXPOSE 9094
@@ -42,5 +50,5 @@ EXPOSE 9094
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:9094/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Run the application with Docker profile
+ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar"]

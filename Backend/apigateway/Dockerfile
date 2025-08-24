@@ -1,4 +1,4 @@
-# Multi-stage build for Inventory Service
+# Multi-stage build for API Gateway Service
 FROM maven:3.9.5-eclipse-temurin-21 AS build
 
 # Set working directory
@@ -29,7 +29,7 @@ FROM eclipse-temurin:21-jre-alpine
 RUN apk add --no-cache curl
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S inventoryuser && adduser -u 1001 -S inventoryuser -G inventoryuser
+RUN addgroup -g 1001 -S gatewayuser && adduser -u 1001 -S gatewayuser -G gatewayuser
 
 # Set working directory
 WORKDIR /app
@@ -38,17 +38,17 @@ WORKDIR /app
 COPY --from=build /workspace/target/*.jar app.jar
 
 # Change ownership to non-root user
-RUN chown inventoryuser:inventoryuser app.jar
+RUN chown gatewayuser:gatewayuser app.jar
 
 # Switch to non-root user
-USER inventoryuser
+USER gatewayuser
 
 # Expose application port
-EXPOSE 9093
+EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:9093/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# Run the application with Docker profile
-ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar"]
+# Run the application with Docker profile and optimized JVM options
+ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-Dspring.profiles.active=docker", "-jar", "app.jar"]
