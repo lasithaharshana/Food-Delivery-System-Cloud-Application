@@ -5,35 +5,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
   onToggle: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onToggle }) => {
-  const [email, setEmail] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login({ email, password });
+      await login({ usernameOrEmail, password });
       toast.success('Welcome back!');
+      
+      // Navigate to appropriate dashboard based on user role
+      // This will be handled by the auth context after successful login
     } catch (error) {
-      toast.error('Invalid email or password');
+      toast.error(error instanceof Error ? error.message : 'Invalid credentials');
     }
-  };
-
-  const handleDemoLogin = (role: 'user' | 'restaurant' | 'admin') => {
-    const demoCredentials = {
-      user: { email: 'user@demo.com', password: 'demo123' },
-      restaurant: { email: 'restaurant@demo.com', password: 'demo123' },
-      admin: { email: 'admin@demo.com', password: 'demo123' },
-    };
-    
-    setEmail(demoCredentials[role].email);
-    setPassword(demoCredentials[role].password);
   };
 
   return (
@@ -47,13 +41,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggle }) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="usernameOrEmail">Username or Email</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="usernameOrEmail"
+              type="text"
+              placeholder="Enter your username or email"
+              value={usernameOrEmail}
+              onChange={(e) => setUsernameOrEmail(e.target.value)}
               required
             />
           </div>
@@ -79,38 +73,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggle }) => {
             {isLoading ? 'Signing In...' : 'Sign In'}
           </Button>
         </form>
-
-        <div className="mt-6">
-          <div className="text-center text-sm text-muted-foreground mb-3">
-            Try demo accounts:
-          </div>
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => handleDemoLogin('user')}
-            >
-              Demo Customer
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => handleDemoLogin('restaurant')}
-            >
-              Demo Restaurant
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => handleDemoLogin('admin')}
-            >
-              Demo Admin
-            </Button>
-          </div>
-        </div>
 
         <div className="mt-6 text-center">
           <button
