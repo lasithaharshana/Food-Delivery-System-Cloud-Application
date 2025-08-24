@@ -2,6 +2,7 @@ package com.deliverysystem.apigateway.service;
 
 import com.deliverysystem.apigateway.dto.AuthRequest;
 import com.deliverysystem.apigateway.dto.RegisterRequest;
+import com.deliverysystem.apigateway.dto.UpdateUserRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -74,6 +75,183 @@ public class AuthServiceClient {
             return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         } catch (Exception e) {
             throw new RuntimeException("Token validation failed", e);
+        }
+    }
+    
+    // User Management Methods
+    public ResponseEntity<String> getUserById(Long id, String token) {
+        String url = authServiceUrl + "/api/users/" + id;
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> getUserByUsername(String username, String token) {
+        String url = authServiceUrl + "/api/users/username/" + username;
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> getUserByEmail(String email, String token) {
+        String url = authServiceUrl + "/api/users/email/" + email;
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> getAllUsers(String token, String queryParams) {
+        String url = authServiceUrl + "/api/users" + (queryParams != null ? "?" + queryParams : "");
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> getUsersByRole(String role, String token) {
+        String url = authServiceUrl + "/api/users/role/" + role;
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> getActiveUsers(String token) {
+        String url = authServiceUrl + "/api/users/active";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> getInactiveUsers(String token) {
+        String url = authServiceUrl + "/api/users/inactive";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> updateUser(Long id, UpdateUserRequest updateRequest, String token) {
+        String url = authServiceUrl + "/api/users/" + id;
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<UpdateUserRequest> request = new HttpEntity<>(updateRequest, headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> deleteUser(Long id, String token) {
+        String url = authServiceUrl + "/api/users/" + id;
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> deactivateUser(Long id, String token) {
+        String url = authServiceUrl + "/api/users/" + id + "/deactivate";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.PATCH, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> activateUser(Long id, String token) {
+        String url = authServiceUrl + "/api/users/" + id + "/activate";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.PATCH, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("User service unavailable", e);
         }
     }
 }
