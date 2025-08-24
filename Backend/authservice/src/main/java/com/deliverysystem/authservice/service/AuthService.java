@@ -38,13 +38,21 @@ public class AuthService {
             throw new UserAlreadyExistsException("Email already exists: " + request.getEmail());
         }
         
-        // Validate restaurant-specific fields
+        // Validate role-specific fields
         if (request.getRole() == User.Role.RESTAURANT) {
             if (request.getRestaurantName() == null || request.getRestaurantName().trim().isEmpty()) {
                 throw new IllegalArgumentException("Restaurant name is required for restaurant role");
             }
             if (request.getRestaurantAddress() == null || request.getRestaurantAddress().trim().isEmpty()) {
                 throw new IllegalArgumentException("Restaurant address is required for restaurant role");
+            }
+        } else if (request.getRole() == User.Role.CUSTOMER) {
+            // Ensure customers don't have restaurant fields set
+            if (request.getRestaurantName() != null && !request.getRestaurantName().trim().isEmpty()) {
+                throw new IllegalArgumentException("Restaurant name should not be provided for customer role");
+            }
+            if (request.getRestaurantAddress() != null && !request.getRestaurantAddress().trim().isEmpty()) {
+                throw new IllegalArgumentException("Restaurant address should not be provided for customer role");
             }
         }
         
@@ -57,8 +65,8 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
                 .role(request.getRole())
-                .restaurantName(request.getRestaurantName())
-                .restaurantAddress(request.getRestaurantAddress())
+                .restaurantName(request.getRole() == User.Role.RESTAURANT ? request.getRestaurantName() : null)
+                .restaurantAddress(request.getRole() == User.Role.RESTAURANT ? request.getRestaurantAddress() : null)
                 .isActive(true)
                 .build();
         

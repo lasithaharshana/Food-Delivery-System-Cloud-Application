@@ -1,5 +1,19 @@
 # API Usage Examples
 
+## Role-Based Registration Rules
+
+### Customer Registration
+- Role: `CUSTOMER`
+- Required fields: username, email, password, firstName, lastName, role
+- Optional fields: phoneNumber
+- **Important**: `restaurantName` and `restaurantAddress` should NOT be provided for customers
+
+### Restaurant Registration  
+- Role: `RESTAURANT`
+- Required fields: username, email, password, firstName, lastName, role, restaurantName, restaurantAddress
+- Optional fields: phoneNumber
+- **Important**: Both `restaurantName` and `restaurantAddress` are MANDATORY for restaurants
+
 ## Register a Customer
 
 ```bash
@@ -33,6 +47,39 @@ curl -X POST http://localhost:8081/api/auth/register \
     "restaurantAddress": "123 Pizza Street, Food City"
   }'
 ```
+
+## Validation Error Examples
+
+### Customer with Restaurant Fields (Invalid)
+```bash
+curl -X POST http://localhost:8081/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "invalid_customer",
+    "email": "invalid@customer.com",
+    "password": "password123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "CUSTOMER",
+    "restaurantName": "Should Not Be Here"
+  }'
+```
+**Expected Error**: "Restaurant name should not be provided for customer role"
+
+### Restaurant without Required Fields (Invalid)
+```bash
+curl -X POST http://localhost:8081/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "invalid_restaurant",
+    "email": "invalid@restaurant.com",
+    "password": "password123",
+    "firstName": "Mario",
+    "lastName": "Rossi",
+    "role": "RESTAURANT"
+  }'
+```
+**Expected Error**: "Restaurant name is required for restaurant role"
 
 ## Login
 
