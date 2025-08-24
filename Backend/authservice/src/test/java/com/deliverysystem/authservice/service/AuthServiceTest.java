@@ -49,6 +49,7 @@ class AuthServiceTest {
                 .lastName("Doe")
                 .phoneNumber("+1234567890")
                 .role(User.Role.CUSTOMER)
+                .address("456 Customer Ave")
                 .build();
 
         // Restaurant registration request
@@ -61,7 +62,7 @@ class AuthServiceTest {
                 .phoneNumber("+1234567891")
                 .role(User.Role.RESTAURANT)
                 .restaurantName("Mario's Pizza")
-                .restaurantAddress("123 Pizza Street")
+                .address("123 Pizza Street")
                 .build();
     }
 
@@ -109,6 +110,7 @@ class AuthServiceTest {
                 .firstName("John")
                 .lastName("Doe")
                 .role(User.Role.CUSTOMER)
+                .address("123 Test Ave")
                 .restaurantName("Should Not Be Here")
                 .build();
 
@@ -133,7 +135,7 @@ class AuthServiceTest {
                 .firstName("Mario")
                 .lastName("Rossi")
                 .role(User.Role.RESTAURANT)
-                .restaurantAddress("123 Pizza Street")
+                .address("123 Pizza Street")
                 // Missing restaurantName
                 .build();
 
@@ -159,7 +161,7 @@ class AuthServiceTest {
                 .lastName("Rossi")
                 .role(User.Role.RESTAURANT)
                 .restaurantName("Mario's Pizza")
-                // Missing restaurantAddress
+                // Missing address
                 .build();
 
         when(userRepository.existsByUsername(any())).thenReturn(false);
@@ -170,6 +172,6 @@ class AuthServiceTest {
                 IllegalArgumentException.class,
                 () -> authService.register(invalidRestaurant)
         );
-        assertEquals("Restaurant address is required for restaurant role", exception.getMessage());
+        assertEquals("Address is required", exception.getMessage());
     }
 }

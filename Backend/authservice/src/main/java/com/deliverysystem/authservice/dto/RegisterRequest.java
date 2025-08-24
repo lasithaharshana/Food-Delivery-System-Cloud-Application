@@ -50,10 +50,10 @@ public class RegisterRequest {
     @Schema(description = "User role - CUSTOMER or RESTAURANT", example = "RESTAURANT", allowableValues = {"CUSTOMER", "RESTAURANT"})
     private User.Role role;
     
+    @Schema(description = "User address", example = "123 Main St, City")
+    private String address;
+    
     // Additional fields for restaurant owners
     @Schema(description = "Restaurant name (required only for RESTAURANT role)", example = "John's Restaurant")
     private String restaurantName;
-    
-    @Schema(description = "Restaurant address (required only for RESTAURANT role)", example = "123 Main St, City")
-    private String restaurantAddress;
 }

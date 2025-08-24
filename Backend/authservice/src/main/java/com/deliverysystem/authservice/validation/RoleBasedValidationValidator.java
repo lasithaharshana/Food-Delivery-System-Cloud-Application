@@ -20,31 +20,27 @@ public class RoleBasedValidationValidator implements ConstraintValidator<RoleBas
 
         context.disableDefaultConstraintViolation();
 
+        // Address is required for all users
+        if (request.getAddress() == null || request.getAddress().trim().isEmpty()) {
+            context.buildConstraintViolationWithTemplate("Address is required")
+                    .addPropertyNode("address")
+                    .addConstraintViolation();
+            return false;
+        }
+        
         if (request.getRole() == User.Role.RESTAURANT) {
-            // Restaurant role must have restaurant name and address
+            // Restaurant role must have restaurant name
             if (request.getRestaurantName() == null || request.getRestaurantName().trim().isEmpty()) {
                 context.buildConstraintViolationWithTemplate("Restaurant name is required for restaurant role")
                         .addPropertyNode("restaurantName")
                         .addConstraintViolation();
                 return false;
             }
-            if (request.getRestaurantAddress() == null || request.getRestaurantAddress().trim().isEmpty()) {
-                context.buildConstraintViolationWithTemplate("Restaurant address is required for restaurant role")
-                        .addPropertyNode("restaurantAddress")
-                        .addConstraintViolation();
-                return false;
-            }
         } else if (request.getRole() == User.Role.CUSTOMER) {
-            // Customer role should not have restaurant fields
+            // Customer role should not have restaurant name
             if (request.getRestaurantName() != null && !request.getRestaurantName().trim().isEmpty()) {
                 context.buildConstraintViolationWithTemplate("Restaurant name should not be provided for customer role")
                         .addPropertyNode("restaurantName")
-                        .addConstraintViolation();
-                return false;
-            }
-            if (request.getRestaurantAddress() != null && !request.getRestaurantAddress().trim().isEmpty()) {
-                context.buildConstraintViolationWithTemplate("Restaurant address should not be provided for customer role")
-                        .addPropertyNode("restaurantAddress")
                         .addConstraintViolation();
                 return false;
             }

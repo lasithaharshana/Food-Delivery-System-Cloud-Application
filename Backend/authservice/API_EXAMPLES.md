@@ -4,15 +4,15 @@
 
 ### Customer Registration
 - Role: `CUSTOMER`
-- Required fields: username, email, password, firstName, lastName, role
+- Required fields: username, email, password, firstName, lastName, role, address
 - Optional fields: phoneNumber
-- **Important**: `restaurantName` and `restaurantAddress` should NOT be provided for customers
+- **Important**: `restaurantName` should NOT be provided for customers
 
 ### Restaurant Registration  
 - Role: `RESTAURANT`
-- Required fields: username, email, password, firstName, lastName, role, restaurantName, restaurantAddress
+- Required fields: username, email, password, firstName, lastName, role, restaurantName, address
 - Optional fields: phoneNumber
-- **Important**: Both `restaurantName` and `restaurantAddress` are MANDATORY for restaurants
+- **Important**: Both `restaurantName` and `address` are MANDATORY for restaurants
 
 ## Register a Customer
 
@@ -26,7 +26,8 @@ curl -X POST http://localhost:8081/api/auth/register \
     "firstName": "John",
     "lastName": "Doe",
     "phoneNumber": "+1234567890",
-    "role": "CUSTOMER"
+    "role": "CUSTOMER",
+    "address": "456 Customer Ave, City"
   }'
 ```
 
@@ -44,7 +45,7 @@ curl -X POST http://localhost:8081/api/auth/register \
     "phoneNumber": "+1234567891",
     "role": "RESTAURANT",
     "restaurantName": "Mario Pizza Place",
-    "restaurantAddress": "123 Pizza Street, Food City"
+    "address": "123 Pizza Street, Food City"
   }'
 ```
 
