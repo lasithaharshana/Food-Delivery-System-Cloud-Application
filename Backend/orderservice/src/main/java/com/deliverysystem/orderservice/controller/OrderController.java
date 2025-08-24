@@ -1,5 +1,7 @@
 package com.deliverysystem.orderservice.controller;
+
 import com.deliverysystem.orderservice.model.Order;
+import com.deliverysystem.orderservice.model.OrderItem;
 import com.deliverysystem.orderservice.repository.*;
 
 import org.springframework.web.bind.annotation.*;
@@ -70,18 +72,26 @@ public class OrderController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     public Order updateItem(@Parameter(description = "Order ID") @PathVariable Integer id, @RequestBody Order updated) {
-        Order item = repo.findById(id).orElse(null);
-        if (item != null) {
-            item.setName(updated.getName());
-            item.setQty(updated.getQty());
-            item.setDescription(updated.getDescription());
-            item.setCustomerName(updated.getCustomerName());
-            item.setAddress(updated.getAddress());
-            item.setOrderDate(updated.getOrderDate());
-            item.setTotalCost(updated.getTotalCost());
-            return repo.save(item);
-        }
-        return null;
+        return repo.findById(id)
+                .map(item -> {
+                    item.setName(updated.getName());
+                    item.setDescription(updated.getDescription());
+                    item.setCustomerName(updated.getCustomerName());
+                    item.setAddress(updated.getAddress());
+                    item.setOrderDate(updated.getOrderDate());
+                    item.setTotalCost(updated.getTotalCost());
+
+                    // Clear existing items (orphanRemoval removes them from DB)
+                    item.removeOrderItems();
+
+                    for (OrderItem newItem : updated.getOrderItems()) {
+                        newItem.setOrder(item);
+                        item.addOrderItem(newItem);
+                    }
+
+                    return repo.save(item);
+                })
+                .orElse(null);
     }
 
     @DeleteMapping("/{id}")

@@ -1,4 +1,4 @@
-# Multi-stage build for Inventory Service
+# Multi-stage build for restaurant Service
 FROM maven:3.9.5-eclipse-temurin-21 AS build
 
 # Set working directory
@@ -25,11 +25,21 @@ RUN ./mvnw clean package -DskipTests
 # Production stage
 FROM eclipse-temurin:21-jre-alpine
 
+# Proxy settings (replace with your actual proxy if needed)
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+
+ENV http_proxy=$HTTP_PROXY
+ENV https_proxy=$HTTPS_PROXY
+ENV no_proxy=$NO_PROXY
+
+
 # Install curl for health checks
 RUN apk add --no-cache curl
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S inventoryuser && adduser -u 1001 -S inventoryuser -G inventoryuser
+RUN addgroup -g 1001 -S restaurantuser && adduser -u 1001 -S restaurantuser -G restaurantuser
 
 # Set working directory
 WORKDIR /app
@@ -38,10 +48,10 @@ WORKDIR /app
 COPY --from=build /workspace/target/*.jar app.jar
 
 # Change ownership to non-root user
-RUN chown inventoryuser:inventoryuser app.jar
+RUN chown restaurantuser:restaurantuser app.jar
 
 # Switch to non-root user
-USER inventoryuser
+USER restaurantuser
 
 # Expose application port
 EXPOSE 9093

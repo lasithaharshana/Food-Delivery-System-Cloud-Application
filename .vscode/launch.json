@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "RestaurantserviceApplication",
+            "request": "launch",
+            "mainClass": "com.deliverysystem.restaurantservice.RestaurantserviceApplication",
+            "projectName": "restaurantservice"
+        },
+        {
+            "type": "java",
             "name": "OrderserviceApplication",
             "request": "launch",
             "mainClass": "com.deliverysystem.orderservice.OrderserviceApplication",

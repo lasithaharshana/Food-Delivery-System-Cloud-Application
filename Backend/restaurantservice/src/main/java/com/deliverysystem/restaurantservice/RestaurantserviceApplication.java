@@ -1,13 +1,13 @@
-package com.deliverysystem.inventoryservice;
+package com.deliverysystem.restaurantservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class InventoryserviceApplication {
+public class RestaurantserviceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(InventoryserviceApplication.class, args);
+		SpringApplication.run(RestaurantserviceApplication.class, args);
 	}
 
 }
