@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mysql-auth:
     image: mysql:8.0
@@ -32,6 +30,13 @@ services:
       - "33071:3306"
     volumes:
       - mysql_inventory_data:/var/lib/mysql
+    command: --bind-address=0.0.0.0 --skip-name-resolve
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   mysql-order:
     image: mysql:8.0
@@ -45,6 +50,13 @@ services:
       - "33081:3306"
     volumes:
       - mysql_order_data:/var/lib/mysql
+    command: --bind-address=0.0.0.0 --skip-name-resolve
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   authservice:
     build: ./authservice
@@ -75,7 +87,9 @@ services:
     ports:
       - "9093:9093"
     depends_on:
-      - mysql-inventory
+      mysql-inventory:
+        condition: service_healthy
+    restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-inventory:3306/inventorydb
       SPRING_DATASOURCE_USERNAME: user
@@ -87,7 +101,9 @@ services:
     ports:
       - "9094:9094"
     depends_on:
-      - mysql-order
+      mysql-order:
+        condition: service_healthy
+    restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-order:3306/orderdb
       SPRING_DATASOURCE_USERNAME: user
