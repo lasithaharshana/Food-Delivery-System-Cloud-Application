@@ -52,7 +52,6 @@ public class AuthControllerIntegrationTest {
                 .lastName("User")
                 .phoneNumber("+1234567890")
                 .role(User.Role.CUSTOMER)
-                .address("123 Test Street")
                 .build();
 
         mockMvc.perform(post("/api/auth/register")
