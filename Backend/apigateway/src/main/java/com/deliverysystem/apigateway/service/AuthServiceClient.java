@@ -67,12 +67,30 @@ public class AuthServiceClient {
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
         
-        HttpEntity<String> request = new HttpEntity<>(headers);
+        // Create request body with token
+        String requestBody = "{\"token\":\"" + token + "\"}";
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
         
         try {
-            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Token validation failed", e);
+        }
+    }
+
+    public ResponseEntity<String> validateTokenPost(String token) {
+        String url = authServiceUrl + "/api/auth/validate";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        // Create request body with token
+        String requestBody = "{\"token\":\"" + token + "\"}";
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+        
+        try {
+            return restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         } catch (Exception e) {
             throw new RuntimeException("Token validation failed", e);
         }

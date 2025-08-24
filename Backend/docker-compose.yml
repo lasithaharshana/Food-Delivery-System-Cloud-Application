@@ -140,6 +140,8 @@ services:
       orderservice:
         condition: service_healthy
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
       AUTH_SERVICE_URL: http://authservice:8081

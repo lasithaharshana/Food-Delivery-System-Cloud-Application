@@ -1,11 +1,8 @@
 package com.deliverysystem.apigateway.controller;
 
-import com.deliverysystem.apigateway.dto.ApiResponse;
 import com.deliverysystem.apigateway.dto.UpdateUserRequest;
 import com.deliverysystem.apigateway.service.AuthServiceClient;
 import com.deliverysystem.apigateway.util.JwtUtil;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,8 +33,6 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
     
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    
     private String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -58,7 +53,7 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public ResponseEntity<ApiResponse<Object>> getUserById(
+    public ResponseEntity<String> getUserById(
             @Parameter(description = "User ID") @PathVariable Long id, 
             HttpServletRequest request) {
         try {
@@ -66,28 +61,20 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.getUserById(id, token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode userResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(userResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("User not found"));
+            return authServiceClient.getUserById(id, token);
                     
         } catch (Exception e) {
             log.error("Error getting user by ID: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
     @GetMapping("/username/{username}")
-    public ResponseEntity<ApiResponse<Object>> getUserByUsername(
+    public ResponseEntity<String> getUserByUsername(
             @PathVariable String username, 
             HttpServletRequest request) {
         try {
@@ -95,28 +82,20 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.getUserByUsername(username, token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode userResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(userResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("User not found"));
+            return authServiceClient.getUserByUsername(username, token);
                     
         } catch (Exception e) {
             log.error("Error getting user by username: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
     @GetMapping("/email/{email}")
-    public ResponseEntity<ApiResponse<Object>> getUserByEmail(
+    public ResponseEntity<String> getUserByEmail(
             @PathVariable String email, 
             HttpServletRequest request) {
         try {
@@ -124,23 +103,15 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.getUserByEmail(email, token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode userResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(userResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("User not found"));
+            return authServiceClient.getUserByEmail(email, token);
                     
         } catch (Exception e) {
             log.error("Error getting user by email: {}", email, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
@@ -150,7 +121,7 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public ResponseEntity<ApiResponse<Object>> getAllUsers(
+    public ResponseEntity<String> getAllUsers(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sortBy,
@@ -162,31 +133,24 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
             String queryParams = String.format("page=%d&size=%d&sortBy=%s&sortDir=%s&paginated=%s", 
                     page, size, sortBy, sortDir, paginated);
             
-            ResponseEntity<String> response = authServiceClient.getAllUsers(token, queryParams);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode usersResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(usersResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to retrieve users"));
+            // Return exact response from auth service
+            return authServiceClient.getAllUsers(token, queryParams);
                     
         } catch (Exception e) {
             log.error("Error getting all users", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
     @GetMapping("/role/{role}")
-    public ResponseEntity<ApiResponse<Object>> getUsersByRole(
+    public ResponseEntity<String> getUsersByRole(
             @PathVariable String role, 
             HttpServletRequest request) {
         try {
@@ -194,77 +158,53 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.getUsersByRole(role, token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode usersResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(usersResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to retrieve users by role"));
+            return authServiceClient.getUsersByRole(role, token);
                     
         } catch (Exception e) {
             log.error("Error getting users by role: {}", role, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
     @GetMapping("/active")
-    public ResponseEntity<ApiResponse<Object>> getActiveUsers(HttpServletRequest request) {
+    public ResponseEntity<String> getActiveUsers(HttpServletRequest request) {
         try {
             String token = extractTokenFromRequest(request);
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.getActiveUsers(token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode usersResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(usersResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to retrieve active users"));
+            return authServiceClient.getActiveUsers(token);
                     
         } catch (Exception e) {
             log.error("Error getting active users", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
     @GetMapping("/inactive")
-    public ResponseEntity<ApiResponse<Object>> getInactiveUsers(HttpServletRequest request) {
+    public ResponseEntity<String> getInactiveUsers(HttpServletRequest request) {
         try {
             String token = extractTokenFromRequest(request);
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.getInactiveUsers(token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode usersResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(usersResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to retrieve inactive users"));
+            return authServiceClient.getInactiveUsers(token);
                     
         } catch (Exception e) {
             log.error("Error getting inactive users", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
@@ -277,7 +217,7 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input data"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public ResponseEntity<ApiResponse<Object>> updateUser(
+    public ResponseEntity<String> updateUser(
             @Parameter(description = "User ID") @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest updateRequest,
             HttpServletRequest request) {
@@ -286,23 +226,15 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.updateUser(id, updateRequest, token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode userResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(userResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to update user"));
+            return authServiceClient.updateUser(id, updateRequest, token);
                     
         } catch (Exception e) {
             log.error("Error updating user: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
@@ -314,7 +246,7 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Insufficient permissions"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public ResponseEntity<ApiResponse<String>> deleteUser(
+    public ResponseEntity<String> deleteUser(
             @Parameter(description = "User ID") @PathVariable Long id,
             HttpServletRequest request) {
         try {
@@ -322,34 +254,27 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
             // Check if user has required role (RESTAURANT)
             String role = jwtUtil.getRoleFromToken(token);
             if (!"RESTAURANT".equals(role)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiResponse.error("Insufficient permissions"));
+                        .body("{\"error\": \"Insufficient permissions\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.deleteUser(id, token);
-            
-            if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
-                return ResponseEntity.ok(ApiResponse.success("User deleted successfully"));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to delete user"));
+            return authServiceClient.deleteUser(id, token);
                     
         } catch (Exception e) {
             log.error("Error deleting user: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<ApiResponse<Object>> deactivateUser(
+    public ResponseEntity<String> deactivateUser(
             @PathVariable Long id,
             HttpServletRequest request) {
         try {
@@ -357,28 +282,20 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.deactivateUser(id, token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode userResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(userResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to deactivate user"));
+            return authServiceClient.deactivateUser(id, token);
                     
         } catch (Exception e) {
             log.error("Error deactivating user: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
     
     @PatchMapping("/{id}/activate")
-    public ResponseEntity<ApiResponse<Object>> activateUser(
+    public ResponseEntity<String> activateUser(
             @PathVariable Long id,
             HttpServletRequest request) {
         try {
@@ -386,23 +303,15 @@ public class UserController {
             
             if (!validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid or expired token"));
+                        .body("{\"error\": \"Invalid or expired token\"}");
             }
             
-            ResponseEntity<String> response = authServiceClient.activateUser(id, token);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode userResponse = objectMapper.readTree(response.getBody());
-                return ResponseEntity.ok(ApiResponse.success(userResponse));
-            }
-            
-            return ResponseEntity.status(response.getStatusCode())
-                    .body(ApiResponse.error("Failed to activate user"));
+            return authServiceClient.activateUser(id, token);
                     
         } catch (Exception e) {
             log.error("Error activating user: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("User service error: " + e.getMessage()));
+                    .body("{\"error\": \"User service error: " + e.getMessage() + "\"}");
         }
     }
 }
