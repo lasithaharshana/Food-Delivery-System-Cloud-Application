@@ -75,7 +75,7 @@ public class AuthControllerIntegrationTest {
                 .phoneNumber("+1234567890")
                 .role(User.Role.RESTAURANT)
                 .restaurantName("Test Restaurant")
-                .restaurantAddress("123 Test St")
+                .address("123 Test St")
                 .build();
 
         mockMvc.perform(post("/api/auth/register")

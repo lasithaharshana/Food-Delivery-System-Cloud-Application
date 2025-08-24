@@ -1,6 +1,7 @@
 package com.deliverysystem.authservice.dto;
 
 import com.deliverysystem.authservice.entity.User;
+import com.deliverysystem.authservice.validation.RoleBasedValidation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@RoleBasedValidation
 @Schema(description = "User registration request")
 public class RegisterRequest {
     
@@ -45,13 +47,13 @@ public class RegisterRequest {
     private String phoneNumber;
     
     @NotNull(message = "Role is required")
-    @Schema(description = "User role", example = "CUSTOMER")
+    @Schema(description = "User role - CUSTOMER or RESTAURANT", example = "RESTAURANT", allowableValues = {"CUSTOMER", "RESTAURANT"})
     private User.Role role;
     
-    // Additional fields for restaurant owners
-    @Schema(description = "Restaurant name (required for restaurant role)", example = "John's Restaurant")
-    private String restaurantName;
+    @Schema(description = "User address", example = "123 Main St, City")
+    private String address;
     
-    @Schema(description = "Restaurant address (required for restaurant role)", example = "123 Main St, City")
-    private String restaurantAddress;
+    // Additional fields for restaurant owners
+    @Schema(description = "Restaurant name (required only for RESTAURANT role)", example = "John's Restaurant")
+    private String restaurantName;
 }

@@ -71,8 +71,8 @@ public class User {
     @Column(name = "restaurant_name")
     private String restaurantName;
     
-    @Column(name = "restaurant_address")
-    private String restaurantAddress;
+    @Column(name = "address")
+    private String address;
     
     public enum Role {
         CUSTOMER,

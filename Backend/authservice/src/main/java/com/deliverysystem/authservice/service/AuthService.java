@@ -38,13 +38,20 @@ public class AuthService {
             throw new UserAlreadyExistsException("Email already exists: " + request.getEmail());
         }
         
-        // Validate restaurant-specific fields
+        // Validate required fields for all users
+        if (request.getAddress() == null || request.getAddress().trim().isEmpty()) {
+            throw new IllegalArgumentException("Address is required");
+        }
+        
+        // Validate role-specific fields
         if (request.getRole() == User.Role.RESTAURANT) {
             if (request.getRestaurantName() == null || request.getRestaurantName().trim().isEmpty()) {
                 throw new IllegalArgumentException("Restaurant name is required for restaurant role");
             }
-            if (request.getRestaurantAddress() == null || request.getRestaurantAddress().trim().isEmpty()) {
-                throw new IllegalArgumentException("Restaurant address is required for restaurant role");
+        } else if (request.getRole() == User.Role.CUSTOMER) {
+            // Ensure customers don't have restaurant name set
+            if (request.getRestaurantName() != null && !request.getRestaurantName().trim().isEmpty()) {
+                throw new IllegalArgumentException("Restaurant name should not be provided for customer role");
             }
         }
         
@@ -57,8 +64,8 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
                 .role(request.getRole())
-                .restaurantName(request.getRestaurantName())
-                .restaurantAddress(request.getRestaurantAddress())
+                .restaurantName(request.getRole() == User.Role.RESTAURANT ? request.getRestaurantName() : null)
+                .address(request.getAddress()) 
                 .isActive(true)
                 .build();
         
@@ -132,7 +139,7 @@ public class AuthService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .restaurantName(user.getRestaurantName())
-                .restaurantAddress(user.getRestaurantAddress())
+                .address(user.getAddress())
                 .build();
     }
 }

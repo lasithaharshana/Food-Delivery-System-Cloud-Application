@@ -35,6 +35,6 @@ public class UpdateUserRequest {
     @Schema(description = "Restaurant name (for restaurant owners)", example = "John's Updated Restaurant")
     private String restaurantName;
     
-    @Schema(description = "Restaurant address (for restaurant owners)", example = "456 New St, City")
-    private String restaurantAddress;
+    @Schema(description = "User address", example = "456 New St, City")
+    private String address;
 }

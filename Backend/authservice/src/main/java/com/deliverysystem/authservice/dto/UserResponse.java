@@ -49,6 +49,6 @@ public class UserResponse {
     @Schema(description = "Restaurant name (for restaurant owners)")
     private String restaurantName;
     
-    @Schema(description = "Restaurant address (for restaurant owners)")
-    private String restaurantAddress;
+    @Schema(description = "User address")
+    private String address;
 }

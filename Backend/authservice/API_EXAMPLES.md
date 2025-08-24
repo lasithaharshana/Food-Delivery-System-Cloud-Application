@@ -1,5 +1,19 @@
 # API Usage Examples
 
+## Role-Based Registration Rules
+
+### Customer Registration
+- Role: `CUSTOMER`
+- Required fields: username, email, password, firstName, lastName, role, address
+- Optional fields: phoneNumber
+- **Important**: `restaurantName` should NOT be provided for customers
+
+### Restaurant Registration  
+- Role: `RESTAURANT`
+- Required fields: username, email, password, firstName, lastName, role, restaurantName, address
+- Optional fields: phoneNumber
+- **Important**: Both `restaurantName` and `address` are MANDATORY for restaurants
+
 ## Register a Customer
 
 ```bash
@@ -12,7 +26,8 @@ curl -X POST http://localhost:8081/api/auth/register \
     "firstName": "John",
     "lastName": "Doe",
     "phoneNumber": "+1234567890",
-    "role": "CUSTOMER"
+    "role": "CUSTOMER",
+    "address": "456 Customer Ave, City"
   }'
 ```
 
@@ -30,9 +45,42 @@ curl -X POST http://localhost:8081/api/auth/register \
     "phoneNumber": "+1234567891",
     "role": "RESTAURANT",
     "restaurantName": "Mario Pizza Place",
-    "restaurantAddress": "123 Pizza Street, Food City"
+    "address": "123 Pizza Street, Food City"
   }'
 ```
+
+## Validation Error Examples
+
+### Customer with Restaurant Fields (Invalid)
+```bash
+curl -X POST http://localhost:8081/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "invalid_customer",
+    "email": "invalid@customer.com",
+    "password": "password123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "CUSTOMER",
+    "restaurantName": "Should Not Be Here"
+  }'
+```
+**Expected Error**: "Restaurant name should not be provided for customer role"
+
+### Restaurant without Required Fields (Invalid)
+```bash
+curl -X POST http://localhost:8081/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "invalid_restaurant",
+    "email": "invalid@restaurant.com",
+    "password": "password123",
+    "firstName": "Mario",
+    "lastName": "Rossi",
+    "role": "RESTAURANT"
+  }'
+```
+**Expected Error**: "Restaurant name is required for restaurant role"
 
 ## Login
 

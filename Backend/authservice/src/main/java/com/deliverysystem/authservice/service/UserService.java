@@ -112,13 +112,15 @@ public class UserService {
             user.setPhoneNumber(request.getPhoneNumber());
         }
         
+        // Update address for all users
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
+        }
+        
         // Update restaurant-specific fields for restaurant users
         if (user.getRole() == User.Role.RESTAURANT) {
             if (request.getRestaurantName() != null) {
                 user.setRestaurantName(request.getRestaurantName());
-            }
-            if (request.getRestaurantAddress() != null) {
-                user.setRestaurantAddress(request.getRestaurantAddress());
             }
         }
         
@@ -180,7 +182,7 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .restaurantName(user.getRestaurantName())
-                .restaurantAddress(user.getRestaurantAddress())
+                .address(user.getAddress())
                 .build();
     }
 }
