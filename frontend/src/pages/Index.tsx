@@ -30,11 +30,7 @@ const Index = () => {
   }
 
   // Route based on user role and current path
-  if (user?.role === 'admin') {
-    return <AdminDashboard />;
-  }
-  
-  if (user?.role === 'restaurant') {
+  if (user?.role === 'RESTAURANT') {
     // Handle restaurant routes
     switch (location.pathname) {
       case '/restaurant/menu':

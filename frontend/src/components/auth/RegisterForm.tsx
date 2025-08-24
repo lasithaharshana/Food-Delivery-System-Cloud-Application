@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface RegisterFormProps {
   onToggle: () => void;
@@ -13,24 +14,34 @@ interface RegisterFormProps {
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onToggle }) => {
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
     password: '',
-    name: '',
-    phone: '',
-    role: 'user' as 'user' | 'restaurant',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    role: 'CUSTOMER' as 'CUSTOMER' | 'RESTAURANT',
     restaurantName: '',
     address: '',
   });
   
   const { register, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await register(formData);
       toast.success('Account created successfully!');
+      
+      // Navigate to appropriate dashboard based on role
+      if (formData.role === 'RESTAURANT') {
+        navigate('/restaurant');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
-      toast.error('Failed to create account');
+      toast.error(error instanceof Error ? error.message : 'Failed to create account');
     }
   };
 
@@ -49,12 +60,34 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggle }) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
-              id="name"
-              placeholder="Enter your full name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
+              id="username"
+              placeholder="Enter your username"
+              value={formData.username}
+              onChange={(e) => handleInputChange('username', e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First Name</Label>
+            <Input
+              id="firstName"
+              placeholder="Enter your first name"
+              value={formData.firstName}
+              onChange={(e) => handleInputChange('firstName', e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              placeholder="Enter your last name"
+              value={formData.lastName}
+              onChange={(e) => handleInputChange('lastName', e.target.value)}
               required
             />
           </div>
@@ -84,13 +117,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggle }) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phoneNumber">Phone Number</Label>
             <Input
-              id="phone"
+              id="phoneNumber"
               type="tel"
               placeholder="Enter your phone number"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
+              value={formData.phoneNumber}
+              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+              required
             />
           </div>
 
@@ -101,17 +135,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggle }) => {
               onValueChange={(value) => handleInputChange('role', value)}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="user" id="user" />
-                <Label htmlFor="user">Customer - Order food from restaurants</Label>
+                <RadioGroupItem value="CUSTOMER" id="CUSTOMER" />
+                <Label htmlFor="CUSTOMER">Customer - Order food from restaurants</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="restaurant" id="restaurant" />
-                <Label htmlFor="restaurant">Restaurant - Manage your restaurant</Label>
+                <RadioGroupItem value="RESTAURANT" id="RESTAURANT" />
+                <Label htmlFor="RESTAURANT">Restaurant - Manage your restaurant</Label>
               </div>
             </RadioGroup>
           </div>
 
-          {formData.role === 'restaurant' && (
+          {formData.role === 'RESTAURANT' && (
             <div className="space-y-2">
               <Label htmlFor="restaurantName">Restaurant Name</Label>
               <Input
@@ -131,6 +165,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggle }) => {
               placeholder="Enter your address"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
+              required
             />
           </div>
 

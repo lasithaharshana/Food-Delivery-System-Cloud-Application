@@ -10,7 +10,6 @@ import {
   Settings, 
   LogOut, 
   User,
-  Crown,
   UtensilsCrossed
 } from 'lucide-react';
 
@@ -20,9 +19,7 @@ const Navigation = () => {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin':
-        return <Crown className="w-4 h-4" />;
-      case 'restaurant':
+      case 'RESTAURANT':
         return <Store className="w-4 h-4" />;
       default:
         return <User className="w-4 h-4" />;
@@ -31,14 +28,7 @@ const Navigation = () => {
 
   const getRoleLinks = () => {
     switch (user?.role) {
-      case 'admin':
-        return [
-          { to: '/admin', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
-          { to: '/admin/restaurants', label: 'Restaurants', icon: <Store className="w-4 h-4" /> },
-          { to: '/admin/orders', label: 'Orders', icon: <ShoppingBag className="w-4 h-4" /> },
-          { to: '/admin/users', label: 'Users', icon: <User className="w-4 h-4" /> },
-        ];
-      case 'restaurant':
+      case 'RESTAURANT':
         return [
           { to: '/restaurant', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
           { to: '/restaurant/menu', label: 'Menu', icon: <UtensilsCrossed className="w-4 h-4" /> },
@@ -51,6 +41,18 @@ const Navigation = () => {
           { to: '/profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
         ];
     }
+  };
+
+  // Get user's display name
+  const getUserDisplayName = () => {
+    if (!user) return 'Guest';
+    return `${user.firstName} ${user.lastName}`;
+  };
+
+  // Get user's role display name
+  const getUserRoleDisplay = () => {
+    if (!user) return '';
+    return user.role === 'CUSTOMER' ? 'Customer' : 'Restaurant Owner';
   };
 
   if (!user) return null;
@@ -89,14 +91,14 @@ const Navigation = () => {
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
-            <NotificationBell userRole={user.role as 'customer' | 'restaurant' | 'admin'} unreadCount={3} />
+            <NotificationBell userRole={user.role === 'RESTAURANT' ? 'restaurant' : 'customer'} unreadCount={3} />
             <div className="flex items-center space-x-2 text-sm">
               {getRoleIcon(user.role)}
               <span className="hidden sm:block text-muted-foreground">
-                {user.name}
+                {getUserDisplayName()}
               </span>
               <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium capitalize">
-                {user.role}
+                {getUserRoleDisplay()}
               </span>
             </div>
             

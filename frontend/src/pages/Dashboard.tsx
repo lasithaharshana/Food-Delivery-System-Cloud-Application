@@ -70,6 +70,18 @@ const Dashboard = () => {
 
   const featuredRestaurants = restaurants.filter(r => r.featured);
 
+  // Get user's full name
+  const getUserDisplayName = () => {
+    if (!user) return 'Guest';
+    return `${user.firstName} ${user.lastName}`;
+  };
+
+  // Get user's role display name
+  const getUserRoleDisplay = () => {
+    if (!user) return '';
+    return user.role === 'CUSTOMER' ? 'Customer' : 'Restaurant Owner';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -78,7 +90,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Hey {user?.name}! 👋
+            Hey {getUserDisplayName()}! 👋
           </h1>
           <p className="text-muted-foreground">
             What would you like to eat today?

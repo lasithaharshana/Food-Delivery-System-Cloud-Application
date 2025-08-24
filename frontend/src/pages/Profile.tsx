@@ -19,7 +19,8 @@ import {
   Edit3,
   Plus,
   Trash2,
-  Check
+  Check,
+  Store
 } from 'lucide-react';
 
 // Mock user data
@@ -88,6 +89,18 @@ const Profile = () => {
     });
   };
 
+  // Get user's full name
+  const getUserDisplayName = () => {
+    if (!user) return 'Guest';
+    return `${user.firstName} ${user.lastName}`;
+  };
+
+  // Get user's role display name
+  const getUserRoleDisplay = () => {
+    if (!user) return '';
+    return user.role === 'CUSTOMER' ? 'Customer' : 'Restaurant Owner';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -118,19 +131,19 @@ const Profile = () => {
           <CardContent className="p-6">
             <div className="flex items-center space-x-6">
               <div className="w-24 h-24 bg-gradient-primary rounded-full flex items-center justify-center text-primary-foreground text-2xl font-bold">
-                {user?.name?.charAt(0) || 'U'}
+                {user?.firstName?.charAt(0) || 'U'}
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">{user?.name}</h2>
+                <h2 className="text-2xl font-bold mb-2">{getUserDisplayName()}</h2>
                 <div className="flex items-center space-x-4 text-muted-foreground">
                   <div className="flex items-center space-x-1">
                     <Mail className="w-4 h-4" />
                     <span>{user?.email}</span>
                   </div>
-                  {user?.phone && (
+                  {user?.phoneNumber && (
                     <div className="flex items-center space-x-1">
                       <Phone className="w-4 h-4" />
-                      <span>{user.phone}</span>
+                      <span>{user.phoneNumber}</span>
                     </div>
                   )}
                   <div className="flex items-center space-x-1">
@@ -140,8 +153,16 @@ const Profile = () => {
                 </div>
                 <Badge className="mt-2 bg-primary/10 text-primary border-primary/20">
                   <User className="w-3 h-3 mr-1" />
-                  Customer
+                  {getUserRoleDisplay()}
                 </Badge>
+                {user?.restaurantName && (
+                  <div className="mt-2">
+                    <Badge variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20">
+                      <Store className="w-3 h-3 mr-1" />
+                      {user.restaurantName}
+                    </Badge>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -168,11 +189,29 @@ const Profile = () => {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Full Name</label>
+                    <label className="block text-sm font-medium mb-2">First Name</label>
                     <input
                       type="text"
-                      value={user?.name || ''}
+                      value={user?.firstName || ''}
                       disabled={!isEditing}
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Last Name</label>
+                    <input
+                      type="text"
+                      value={user?.lastName || ''}
+                      disabled={!isEditing}
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Username</label>
+                    <input
+                      type="text"
+                      value={user?.username || ''}
+                      disabled={true}
                       className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed"
                     />
                   </div>
@@ -189,19 +228,22 @@ const Profile = () => {
                     <label className="block text-sm font-medium mb-2">Phone Number</label>
                     <input
                       type="tel"
-                      value={user?.phone || ''}
+                      value={user?.phoneNumber || ''}
                       disabled={!isEditing}
                       className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Date of Birth</label>
-                    <input
-                      type="date"
-                      disabled={!isEditing}
-                      className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed"
-                    />
-                  </div>
+                  {user?.restaurantName && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Restaurant Name</label>
+                      <input
+                        type="text"
+                        value={user.restaurantName}
+                        disabled={!isEditing}
+                        className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  )}
                 </div>
                 {isEditing && (
                   <div className="flex justify-end space-x-4">
@@ -234,6 +276,22 @@ const Profile = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {user?.address && (
+                  <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h4 className="font-medium">Primary Address</h4>
+                        <Badge variant="secondary" className="text-xs">Default</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{user.address}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm">
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 {mockAddresses.map((address) => (
                   <div key={address.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div className="flex-1">
