@@ -25,14 +25,6 @@ RUN ./mvnw clean package -DskipTests
 # Production stage
 FROM eclipse-temurin:21-jre-alpine
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG NO_PROXY
-
-ENV http_proxy=$HTTP_PROXY
-ENV https_proxy=$HTTPS_PROXY
-ENV no_proxy=$NO_PROXY
-
 # Install curl for health checks
 RUN apk add --no-cache curl
 

@@ -1,4 +1,7 @@
+version: "3.9"
+
 services:
+  # ---------- Databases ----------
   mysql-auth:
     image: mysql:8.0
     container_name: mysql-auth
@@ -58,8 +61,9 @@ services:
       retries: 3
       start_period: 30s
 
+  # ---------- Backend Services ----------
   authservice:
-    build: ./authservice
+    build: ./backend/authservice
     container_name: authservice-app
     ports:
       - "8081:8081"
@@ -82,7 +86,7 @@ services:
       start_period: 120s
 
   restaurantservice:
-    build: ./restaurantservice
+    build: ./backend/restaurantservice
     container_name: restaurantservice
     ports:
       - "9093:9093"
@@ -103,7 +107,7 @@ services:
       start_period: 120s
 
   orderservice:
-    build: ./orderservice
+    build: ./backend/orderservice
     container_name: orderservice
     ports:
       - "9094:9094"
@@ -128,7 +132,7 @@ services:
       start_period: 120s
 
   apigateway:
-    build: ./apigateway
+    build: ./backend/apigateway
     container_name: apigateway
     ports:
       - "8080:8080"
@@ -146,13 +150,23 @@ services:
       JWT_EXPIRATION: 86400000
       AUTH_SERVICE_URL: http://authservice:8081
       ORDER_SERVICE_URL: http://orderservice:9094
-      restaurant_SERVICE_URL: http://restaurantservice:9093
+      RESTAURANT_SERVICE_URL: http://restaurantservice:9093
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health", "||", "exit", "1"]
       interval: 30s
       timeout: 15s
       retries: 5
       start_period: 180s
+
+  # ---------- Frontend ----------
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    depends_on:
+      - apigateway
 
 volumes:
   mysql_auth_data:

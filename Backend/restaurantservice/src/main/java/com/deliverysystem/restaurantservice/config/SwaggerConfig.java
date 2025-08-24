@@ -14,10 +14,10 @@ import java.util.List;
 public class SwaggerConfig {
 
     @Bean
-    public OpenAPI inventoryServiceOpenAPI() {
+    public OpenAPI restaurantServiceOpenAPI() {
         Server devServer = new Server();
         devServer.setUrl("http://localhost:9093");
-        devServer.setDescription("Server URL for Inventory Service in Development environment");
+        devServer.setDescription("Server URL for restaurant Service in Development environment");
 
         Contact contact = new Contact();
         contact.setEmail("developer@fooddelivery.com");
@@ -29,10 +29,10 @@ public class SwaggerConfig {
                 .url("https://choosealicense.com/licenses/mit/");
 
         Info info = new Info()
-                .title("Inventory Service API")
+                .title("restaurant Service API")
                 .version("1.0.0")
                 .contact(contact)
-                .description("This API provides endpoints for inventory management including food items, stock levels, and availability tracking.")
+                .description("This API provides endpoints for restaurant management including food items, stock levels, and availability tracking.")
                 .termsOfService("https://www.fooddelivery.com/terms")
                 .license(license);
 

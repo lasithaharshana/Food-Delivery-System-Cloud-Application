@@ -9,20 +9,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class InventoryServiceClient {
+public class RestaurantServiceClient {
     
     private final RestTemplate restTemplate;
-    
-    @Value("${inventory.service.url:http://localhost:9093}")
-    private String inventoryServiceUrl;
-    
-    public InventoryServiceClient() {
+    @Value("${restaurant.service.url:http://localhost:9093}")
+    private String restaurantServiceUrl;
+
+    public RestaurantServiceClient() {
         this.restTemplate = new RestTemplate();
     }
     
     public ResponseEntity<String> proxyRequest(String path, HttpMethod method, 
                                              HttpHeaders headers, Object body) {
-        String url = inventoryServiceUrl + path;
+        String url = restaurantServiceUrl + path;
         
         HttpEntity<Object> request = new HttpEntity<>(body, headers);
         
@@ -33,14 +32,14 @@ public class InventoryServiceClient {
         }
     }
     
-    public ResponseEntity<String> getInventory(String token, Long restaurantId) {
-        String url = inventoryServiceUrl + "/api/inventory/restaurant/" + restaurantId;
-        
+    public ResponseEntity<String> getRestaurant(String token, Long restaurantId) {
+        String url = restaurantServiceUrl + "/api/restaurants/" + restaurantId;
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
-        
+
         HttpEntity<String> request = new HttpEntity<>(headers);
-        
+
         try {
             return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         } catch (Exception e) {
@@ -48,14 +47,29 @@ public class InventoryServiceClient {
         }
     }
     
-    public ResponseEntity<String> addInventoryItem(String token, Object inventoryRequest) {
-        String url = inventoryServiceUrl + "/api/inventory";
-        
+    public ResponseEntity<String> getRestaurants(String token) {
+        String url = restaurantServiceUrl + "/api/restaurants";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Restaurant service unavailable", e);
+        }
+    }
+
+    public ResponseEntity<String> addRestaurant(String token, Object restaurantRequest) {
+        String url = restaurantServiceUrl + "/api/restaurants";
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.set("Content-Type", "application/json");
-        
-        HttpEntity<Object> request = new HttpEntity<>(inventoryRequest, headers);
+
+        HttpEntity<Object> request = new HttpEntity<>(restaurantRequest, headers);
         
         try {
             return restTemplate.postForEntity(url, request, String.class);
@@ -63,20 +77,35 @@ public class InventoryServiceClient {
             throw new RuntimeException("Inventory service unavailable", e);
         }
     }
-    
-    public ResponseEntity<String> updateInventoryItem(String token, Long itemId, Object inventoryRequest) {
-        String url = inventoryServiceUrl + "/api/inventory/" + itemId;
-        
+
+    public ResponseEntity<String> updateRestaurant(String token, Long restaurantId, Object restaurantRequest) {
+        String url = restaurantServiceUrl + "/api/restaurants/" + restaurantId;
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.set("Content-Type", "application/json");
-        
-        HttpEntity<Object> request = new HttpEntity<>(inventoryRequest, headers);
-        
+
+        HttpEntity<Object> request = new HttpEntity<>(restaurantRequest, headers);
+
         try {
             return restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
         } catch (Exception e) {
             throw new RuntimeException("Inventory service unavailable", e);
+        }
+    }
+    
+    public ResponseEntity<String> deleteRestaurant(String token, Long restaurantId) {
+        String url = restaurantServiceUrl + "/api/restaurants/" + restaurantId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        try {
+            return restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Restaurant service unavailable", e);
         }
     }
 }

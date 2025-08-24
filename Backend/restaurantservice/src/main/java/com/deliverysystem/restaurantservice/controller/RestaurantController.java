@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/restaurant")
+@RequestMapping("/api/restaurants")
 @Tag(name = "Restaurant Management", description = "Restaurant management APIs for food items")
 public class RestaurantController {
 

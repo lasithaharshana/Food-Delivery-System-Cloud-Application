@@ -1,6 +1,6 @@
 package com.deliverysystem.apigateway.controller;
 
-import com.deliverysystem.apigateway.service.InventoryServiceClient;
+import com.deliverysystem.apigateway.service.RestaurantServiceClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -11,58 +11,58 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping("/api/restaurants")
 @CrossOrigin(origins = "*")
 @PreAuthorize("hasRole('RESTAURANT')")
-public class InventoryController {
+public class RestaurantController {
     
     @Autowired
-    private InventoryServiceClient inventoryServiceClient;
-    
-    @GetMapping("/my-inventory")
-    public ResponseEntity<String> getMyInventory(HttpServletRequest request,
+    private RestaurantServiceClient restaurantServiceClient;
+
+    @GetMapping("/my-restaurant")
+    public ResponseEntity<String> getMyRestaurant(HttpServletRequest request,
                                                @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = (Long) request.getAttribute("userId");
             String token = authHeader.substring(7); // Remove "Bearer " prefix
             
             // For restaurants, userId typically maps to restaurantId
-            return inventoryServiceClient.getInventory(token, userId);
+            return restaurantServiceClient.getRestaurant(token, userId);
             
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                    .body("{\"success\": false, \"message\": \"Error retrieving inventory: " + e.getMessage() + "\"}");
+                    .body("{\"success\": false, \"message\": \"Error retrieving restaurant: " + e.getMessage() + "\"}");
         }
     }
     
     @PostMapping
-    public ResponseEntity<String> addInventoryItem(HttpServletRequest request,
+    public ResponseEntity<String> addRestaurant(HttpServletRequest request,
                                                  @RequestHeader("Authorization") String authHeader,
-                                                 @RequestBody Object inventoryRequest) {
+                                                 @RequestBody Object restaurantRequest) {
         try {
             String token = authHeader.substring(7); // Remove "Bearer " prefix
-            
-            return inventoryServiceClient.addInventoryItem(token, inventoryRequest);
-            
+
+            return restaurantServiceClient.addRestaurant(token, restaurantRequest);
+
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                    .body("{\"success\": false, \"message\": \"Error adding inventory item: " + e.getMessage() + "\"}");
+                    .body("{\"success\": false, \"message\": \"Error adding restaurant: " + e.getMessage() + "\"}");
         }
     }
     
     @PutMapping("/{itemId}")
-    public ResponseEntity<String> updateInventoryItem(HttpServletRequest request,
+    public ResponseEntity<String> updateRestaurant(HttpServletRequest request,
                                                     @RequestHeader("Authorization") String authHeader,
                                                     @PathVariable Long itemId,
-                                                    @RequestBody Object inventoryRequest) {
+                                                    @RequestBody Object restaurantRequest) {
         try {
             String token = authHeader.substring(7); // Remove "Bearer " prefix
-            
-            return inventoryServiceClient.updateInventoryItem(token, itemId, inventoryRequest);
-            
+
+            return restaurantServiceClient.updateRestaurant(token, itemId, restaurantRequest);
+
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                    .body("{\"success\": false, \"message\": \"Error updating inventory item: " + e.getMessage() + "\"}");
+                    .body("{\"success\": false, \"message\": \"Error updating restaurant: " + e.getMessage() + "\"}");
         }
     }
     
@@ -70,8 +70,8 @@ public class InventoryController {
     public ResponseEntity<String> proxyGetRequest(HttpServletRequest request,
                                                 @RequestHeader HttpHeaders headers) {
         try {
-            String path = request.getRequestURI().replaceFirst("/api/inventory", "/api/inventory");
-            return inventoryServiceClient.proxyRequest(path, HttpMethod.GET, headers, null);
+            String path = request.getRequestURI().replaceFirst("/api/restaurants", "/api/restaurants");
+            return restaurantServiceClient.proxyRequest(path, HttpMethod.GET, headers, null);
             
         } catch (Exception e) {
             return ResponseEntity.status(500)
@@ -84,9 +84,9 @@ public class InventoryController {
                                                  @RequestHeader HttpHeaders headers,
                                                  @RequestBody(required = false) Object body) {
         try {
-            String path = request.getRequestURI().replaceFirst("/api/inventory", "/api/inventory");
-            return inventoryServiceClient.proxyRequest(path, HttpMethod.POST, headers, body);
-            
+            String path = request.getRequestURI().replaceFirst("/api/restaurants", "/api/restaurants");
+            return restaurantServiceClient.proxyRequest(path, HttpMethod.POST, headers, body);
+
         } catch (Exception e) {
             return ResponseEntity.status(500)
                     .body("{\"success\": false, \"message\": \"Error processing request: " + e.getMessage() + "\"}");
@@ -98,8 +98,8 @@ public class InventoryController {
                                                 @RequestHeader HttpHeaders headers,
                                                 @RequestBody(required = false) Object body) {
         try {
-            String path = request.getRequestURI().replaceFirst("/api/inventory", "/api/inventory");
-            return inventoryServiceClient.proxyRequest(path, HttpMethod.PUT, headers, body);
+            String path = request.getRequestURI().replaceFirst("/api/restaurants", "/api/restaurants");
+            return restaurantServiceClient.proxyRequest(path, HttpMethod.PUT, headers, body);
             
         } catch (Exception e) {
             return ResponseEntity.status(500)
@@ -111,8 +111,8 @@ public class InventoryController {
     public ResponseEntity<String> proxyDeleteRequest(HttpServletRequest request,
                                                    @RequestHeader HttpHeaders headers) {
         try {
-            String path = request.getRequestURI().replaceFirst("/api/inventory", "/api/inventory");
-            return inventoryServiceClient.proxyRequest(path, HttpMethod.DELETE, headers, null);
+            String path = request.getRequestURI().replaceFirst("/api/restaurants", "/api/restaurants");
+            return restaurantServiceClient.proxyRequest(path, HttpMethod.DELETE, headers, null);
             
         } catch (Exception e) {
             return ResponseEntity.status(500)

@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: inventoryservice
+  name: restaurantservice
 spec:
   selector:
     matchLabels:
-      app: inventoryservice
+      app: restaurantservice
   template:
     metadata:
       labels:
-        app: inventoryservice
+        app: restaurantservice
     spec:
       containers:
         - name: app
-          image: inventoryservice:latest
+          image: restaurantservice:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_URL
@@ -30,10 +30,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: inventoryservice
+  name: restaurantservice
 spec:
   selector:
-    app: inventoryservice
+    app: restaurantservice
   ports:
     - port: 9093
       targetPort: 9093
