@@ -44,11 +44,14 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/api/health", "/api/info").permitAll()
+                // Protected endpoints
                 .requestMatchers("/api/orders/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/inventory/**").hasRole("RESTAURANT")
+                .requestMatchers("/api/users/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

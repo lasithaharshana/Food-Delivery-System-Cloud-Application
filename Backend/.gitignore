@@ -1,0 +1,16 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Docker volumes
+mysql_auth_data/
+mysql_inventory_data/
+mysql_order_data/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
