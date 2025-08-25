@@ -3,6 +3,8 @@ package com.deliverysystem.orderservice.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "order_items")
 public class OrderItem {
@@ -11,24 +13,31 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String itemId;      // UUID from JSON
-    private String name;        // Item name
-    private Integer quantity;   // Quantity ordered
-    private BigDecimal price;   // Price per item
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(unique = true, nullable = false)
+    private String itemId;
+    private String name;
+    private Integer quantity;
+    private BigDecimal price;
+    @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonBackReference
     private Order order;
 
     // Constructors
-    public OrderItem() {}
+    public OrderItem() {
+    }
 
-    public OrderItem(String itemId, String name, Integer quantity, BigDecimal price, Order order) {
-        this.itemId = itemId;
+    public OrderItem(String name, Integer quantity, BigDecimal price) {
         this.name = name;
         this.quantity = quantity;
         this.price = price;
-        this.order = order;
+    }
+
+    @PrePersist
+    public void generateItemId() {
+        if (itemId == null) {
+            itemId = java.util.UUID.randomUUID().toString();
+        }
     }
 
     // Getters & Setters
@@ -70,13 +79,5 @@ public class OrderItem {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public void setOrder(Order order) {
-        this.order = order;
     }
 }

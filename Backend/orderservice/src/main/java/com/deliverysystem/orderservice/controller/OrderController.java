@@ -1,16 +1,17 @@
 package com.deliverysystem.orderservice.controller;
 
+import com.deliverysystem.orderservice.client.RestaurantClient;
 import com.deliverysystem.orderservice.model.Order;
-import com.deliverysystem.orderservice.model.OrderItem;
-import com.deliverysystem.orderservice.repository.*;
-
+import com.deliverysystem.orderservice.repository.OrderRepository;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
-
+import org.slf4j.Logger;
 
 import java.util.List;
 
@@ -20,9 +21,12 @@ import java.util.List;
 public class OrderController {
 
     private final OrderRepository repo;
+    private final RestaurantClient restaurantClient;
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
-    public OrderController(OrderRepository repo) {
+    public OrderController(OrderRepository repo, RestaurantClient restaurantClient) {
         this.repo = repo;
+        this.restaurantClient = restaurantClient;
     }
 
     @GetMapping("/test")
@@ -53,14 +57,21 @@ public class OrderController {
     @Operation(summary = "Create new order", description = "Place a new order in the system")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Order created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data")
+            @ApiResponse(responseCode = "400", description = "Invalid input data or restaurant does not exist")
     })
-    public Order createItem(@RequestBody Order item) {
+    public ResponseEntity<?> createItem(@RequestBody Order item) {
         try {
-            return repo.save(item);
+            // ✅ Validate restaurant ID using RestaurantClient
+            Boolean exists = restaurantClient.checkRestaurantExists(item.getRestaurantId());
+            if (exists == null || !exists) {
+                return ResponseEntity.badRequest().body("Invalid restaurant ID: " + item.getRestaurantId());
+            }
+            logger.info("Creating order for restaurant ID: {}", item.getRestaurantId());
+            logger.debug("Order details: {}", item);
+            return ResponseEntity.status(201).body(repo.save(item));
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            logger.error("Error creating order: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error creating order: " + e.getMessage());
         }
     }
 
@@ -69,12 +80,17 @@ public class OrderController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order updated successfully"),
             @ApiResponse(responseCode = "404", description = "Order not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data")
+            @ApiResponse(responseCode = "400", description = "Invalid input data or restaurant does not exist")
     })
-    public Order updateItem(@Parameter(description = "Order ID") @PathVariable Integer id, @RequestBody Order updated) {
+    public ResponseEntity<?> updateItem(@Parameter(description = "Order ID") @PathVariable Integer id,
+                                        @RequestBody Order updated) {
         return repo.findById(id)
                 .map(item -> {
-                    item.setOrderId(updated.getOrderId());
+                    // ✅ Validate restaurant before updating
+                    Boolean exists = restaurantClient.checkRestaurantExists(updated.getRestaurantId());
+                    if (exists == null || !exists) {
+                        return ResponseEntity.badRequest().body("Invalid restaurant ID: " + updated.getRestaurantId());
+                    }
                     item.setRestaurantId(updated.getRestaurantId());
                     item.setCustomerId(updated.getCustomerId());
                     item.setCustomerName(updated.getCustomerName());
@@ -82,19 +98,16 @@ public class OrderController {
                     item.setNote(updated.getNote());
                     item.setStatus(updated.getStatus());
                     item.setCost(updated.getCost());
-                    item.setCreatedAt(updated.getCreatedAt());
-                    item.setUpdatedAt(updated.getUpdatedAt());
+
                     // Clear existing items (orphanRemoval removes them from DB)
                     item.removeOrderItems();
 
-                    for (OrderItem newItem : updated.getOrderItems()) {
-                        newItem.setOrder(item);
-                        item.addOrderItem(newItem);
-                    }
+                    // Add updated items
+                    item.setOrderItems(updated.getOrderItems());
 
-                    return repo.save(item);
+                    return ResponseEntity.ok(repo.save(item));
                 })
-                .orElse(null);
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -103,8 +116,11 @@ public class OrderController {
             @ApiResponse(responseCode = "200", description = "Order deleted successfully"),
             @ApiResponse(responseCode = "404", description = "Order not found")
     })
-    public String deleteItem(@Parameter(description = "Order ID") @PathVariable Integer id) {
+    public ResponseEntity<String> deleteItem(@Parameter(description = "Order ID") @PathVariable Integer id) {
+        if (!repo.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
         repo.deleteById(id);
-        return "Item deleted";
+        return ResponseEntity.ok("Item deleted");
     }
 }
