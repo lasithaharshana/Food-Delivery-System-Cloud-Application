@@ -2,6 +2,8 @@ package com.deliverysystem.restaurantservice.controller;
 
 import com.deliverysystem.restaurantservice.model.Restaurant;
 import com.deliverysystem.restaurantservice.repository.RestaurantRepository;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -63,7 +65,8 @@ public class RestaurantController {
             @ApiResponse(responseCode = "404", description = "Restaurant not found"),
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
-    public Restaurant updateItem(@Parameter(description = "Restaurant ID") @PathVariable Integer id, @RequestBody Restaurant updated) {
+    public Restaurant updateItem(@Parameter(description = "Restaurant ID") @PathVariable Integer id,
+            @RequestBody Restaurant updated) {
         return repo.findById(id).map(item -> {
             item.setName(updated.getName());
             item.setDescription(updated.getDescription());
@@ -86,4 +89,11 @@ public class RestaurantController {
         repo.deleteById(id);
         return "Item deleted";
     }
+
+    @GetMapping("/{restaurantId}/exists")
+    public ResponseEntity<Boolean> checkRestaurantExists(@PathVariable String restaurantId) {
+        boolean exists = repo.existsByRestaurantId(restaurantId);
+        return ResponseEntity.ok(exists);
+    }
+
 }

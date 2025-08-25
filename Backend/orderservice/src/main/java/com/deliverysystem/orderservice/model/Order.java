@@ -4,50 +4,86 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "orders")
 public class Order {
 
+    public enum OrderStatus {
+        PENDING,
+        READY,
+        OUT_FOR_DELIVERY,
+        DELIVERED,
+        CANCELLED
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // New fields from JSON
-    private String orderId;         // "uuid"
-    private String restaurantId;    // "uuid"
-    private String customerId;      // "uuid"
+    @Column(unique = true, nullable = false)
+    private String orderId;
+
+    @Column(nullable = false)
+    private String restaurantId;
+
+    @Column(nullable = false)
+    private String customerId;
+
     private String customerName;
     private String customerPhoneNumber;
     private String note;
-    private String status;          // pending | ready | out_for_delivery | delivered | cancelled
-    private Double cost;            // decimal
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.PENDING; // default PENDING
+
+    private Double cost;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Order() {
-    }
+    public Order() {}
 
-    public Order(String orderId, String restaurantId, String customerId,
-                 String customerName, String customerPhoneNumber, String note, String status,
-                 Double cost, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems) {
-        this.orderId = orderId;
+    public Order(String restaurantId, String customerId,
+                 String customerName, String customerPhoneNumber, String note,
+                 Double cost, List<OrderItem> orderItems) {
         this.restaurantId = restaurantId;
         this.customerId = customerId;
         this.customerName = customerName;
         this.customerPhoneNumber = customerPhoneNumber;
         this.note = note;
-        this.status = status;
         this.cost = cost;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
         this.orderItems = orderItems;
     }
 
-    // Getters & Setters
+    @PrePersist
+    public void prePersist() {
+        if (orderId == null) {
+            orderId = UUID.randomUUID().toString();
+        }
+        if (status == null) {
+            status = OrderStatus.PENDING;
+        }
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    // Getters and Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -69,41 +105,25 @@ public class Order {
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
 
     public Double getCost() { return cost; }
     public void setCost(Double cost) { this.cost = cost; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     public List<OrderItem> getOrderItems() { return orderItems; }
-
-    public void addOrderItem(OrderItem item) {
-        orderItems.add(item);
-        item.setOrder(this);
-    }
-
-    public void removeOrderItem(OrderItem item) {
-        orderItems.remove(item);
-        item.setOrder(null);
-    }
+    public void setOrderItems(List<OrderItem> orderItems) { this.orderItems = orderItems; }
 
     public void removeOrderItems() {
         for (OrderItem item : new ArrayList<>(orderItems)) {
             removeOrderItem(item);
         }
+    }
+
+    public void removeOrderItem(OrderItem item) {
+        orderItems.remove(item);
     }
 }
