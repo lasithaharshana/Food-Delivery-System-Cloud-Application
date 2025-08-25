@@ -166,6 +166,7 @@ public class UserController {
     @Operation(summary = "Delete user", description = "Delete user permanently")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions. Only users with RESTAURANT role can perform this operation."),
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })

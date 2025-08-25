@@ -10,6 +10,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -108,6 +110,16 @@ public class AuthServiceClient {
         
         try {
             return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        } catch (HttpClientErrorException e) {
+            // Forward the exact HTTP client error response (4xx)
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
+        } catch (HttpServerErrorException e) {
+            // Forward the exact HTTP server error response (5xx)
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("User service unavailable", e);
         }
@@ -220,6 +232,16 @@ public class AuthServiceClient {
         
         try {
             return restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+        } catch (HttpClientErrorException e) {
+            // Forward the exact HTTP client error response (4xx)
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
+        } catch (HttpServerErrorException e) {
+            // Forward the exact HTTP server error response (5xx)
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("User service unavailable", e);
         }
@@ -236,6 +258,16 @@ public class AuthServiceClient {
         
         try {
             return restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        } catch (HttpClientErrorException e) {
+            // Forward the exact HTTP client error response (4xx)
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
+        } catch (HttpServerErrorException e) {
+            // Forward the exact HTTP server error response (5xx)
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("User service unavailable", e);
         }
