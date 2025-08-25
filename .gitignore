@@ -183,3 +183,8 @@ logs
 # Application specific
 application-local.properties
 application-local.yml
+
+# Docker volumes
+mysql_auth_data/
+mysql_restaurant_data/
+mysql_order_data/
