@@ -60,7 +60,7 @@ services:
 
   authservice:
     build: ./authservice
-    container_name: authservice-app
+    container_name: authservice
     ports:
       - "8081:8081"
     depends_on:
