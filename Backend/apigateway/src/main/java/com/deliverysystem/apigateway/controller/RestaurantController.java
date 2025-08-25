@@ -17,11 +17,11 @@ public class RestaurantController {
     private ProxyService proxyService;
     
     /**
-     * Route all inventory requests to inventory service
+     * Route all restaurant requests to restaurant service
      * JWT validation ensures only RESTAURANT role can access
      */
     @RequestMapping(value = "/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH})
-    public ResponseEntity<String> proxyInventoryService(HttpServletRequest request, @RequestBody(required = false) String body) {
-        return proxyService.proxyRequest(request, body, "inventory");
+    public ResponseEntity<String> proxyRestaurantService(HttpServletRequest request, @RequestBody(required = false) String body) {
+        return proxyService.proxyRequest(request, body, "restaurant");
     }
 }

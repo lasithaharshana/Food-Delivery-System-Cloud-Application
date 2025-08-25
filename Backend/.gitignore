@@ -5,7 +5,7 @@
 
 # Docker volumes
 mysql_auth_data/
-mysql_inventory_data/
+mysql_restaurant_data/
 mysql_order_data/
 
 # Logs

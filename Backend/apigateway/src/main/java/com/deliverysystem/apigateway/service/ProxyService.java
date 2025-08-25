@@ -19,9 +19,10 @@ public class ProxyService {
     
     @Value("${order.service.url}")
     private String orderServiceUrl;
+
     
-    @Value("${inventory.service.url}")
-    private String inventoryServiceUrl;
+    @Value("${restaurant.service.url}")
+    private String restaurantServiceUrl;
     
     public ProxyService() {
         this.restTemplate = new RestTemplate();
@@ -65,7 +66,7 @@ public class ProxyService {
         return switch (serviceType.toLowerCase()) {
             case "auth" -> authServiceUrl;
             case "order" -> orderServiceUrl;
-            case "inventory" -> inventoryServiceUrl;
+            case "restaurant" -> restaurantServiceUrl;
             default -> throw new IllegalArgumentException("Unknown service type: " + serviceType);
         };
     }
