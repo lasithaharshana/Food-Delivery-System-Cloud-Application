@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/order")
 @CrossOrigin(origins = "*")
 @PreAuthorize("hasRole('CUSTOMER')")
 public class OrderController {
