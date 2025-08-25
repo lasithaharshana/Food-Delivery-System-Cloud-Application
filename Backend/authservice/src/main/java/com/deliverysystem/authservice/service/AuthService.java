@@ -126,6 +126,15 @@ public class AuthService {
         }
     }
     
+    public boolean validateToken(String token) {
+        try {
+            return jwtUtil.validateToken(token) && !jwtUtil.isTokenExpired(token);
+        } catch (Exception e) {
+            log.error("Token validation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+    
     private UserResponse convertToUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())

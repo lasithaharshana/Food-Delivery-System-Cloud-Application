@@ -3,6 +3,7 @@ package com.deliverysystem.authservice.controller;
 import com.deliverysystem.authservice.dto.AuthResponse;
 import com.deliverysystem.authservice.dto.LoginRequest;
 import com.deliverysystem.authservice.dto.RegisterRequest;
+import com.deliverysystem.authservice.dto.ValidateTokenRequest;
 import com.deliverysystem.authservice.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -58,5 +59,34 @@ public class AuthController {
         log.info("Login request received for user: {}", request.getUsernameOrEmail());
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/validate")
+    @Operation(
+        summary = "Validate JWT token",
+        description = "Validate the provided JWT token from request body"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Token is valid"),
+        @ApiResponse(responseCode = "401", description = "Invalid or expired token")
+    })
+    public ResponseEntity<String> validateToken(@Valid @RequestBody ValidateTokenRequest request) {
+        try {
+            String token = request.getToken();
+            
+            if (token != null && !token.trim().isEmpty()) {
+                if (authService.validateToken(token)) {
+                    return ResponseEntity.ok("{\"valid\": true, \"message\": \"Token is valid\"}");
+                }
+            }
+            
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"valid\": false, \"message\": \"Invalid or expired token\"}");
+                    
+        } catch (Exception e) {
+            log.error("Token validation error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"valid\": false, \"message\": \"Token validation failed\"}");
+        }
     }
 }
