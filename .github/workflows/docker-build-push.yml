@@ -14,6 +14,11 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tagger.outputs.version }}
+      datetime: ${{ steps.tagger.outputs.datetime }}
+      full_sha: ${{ steps.tagger.outputs.full_sha }}
+      short_sha: ${{ steps.tagger.outputs.short_sha }}
     strategy:
       matrix:
         service:
@@ -63,17 +68,26 @@ jobs:
       id: tagger
       run: |
         set -eux
-        # Try to get the latest git tag as version, fallback to 'dev'
-        VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
+        # Get the latest git tag as version, fallback to 'dev'
+        BASE_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
         # UTC datetime
-        DATETIME=$(date -u +"%Y%m%d-%H%M%S")
+        DATE=$(date -u +"%Y%m%d")
+        TIME=$(date -u +"%H%M%S")
+        DATETIME="${DATE}-${TIME}"
         # Full SHA and short SHA
         FULL_SHA=${GITHUB_SHA}
         SHORT_SHA=${GITHUB_SHA::7}
-        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        # Build combined version tag: base version + date
+        if [ "$BASE_VERSION" = "dev" ]; then
+          FULL_VERSION="dev-${DATETIME}"
+        else
+          FULL_VERSION="${BASE_VERSION}.${DATETIME}"
+        fi
+        echo "version=${BASE_VERSION}" >> $GITHUB_OUTPUT
         echo "datetime=${DATETIME}" >> $GITHUB_OUTPUT
         echo "full_sha=${FULL_SHA}" >> $GITHUB_OUTPUT
         echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        echo "full_version=${FULL_VERSION}" >> $GITHUB_OUTPUT
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -83,12 +97,57 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ steps.meta.outputs.tags }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-${{ matrix.service.name }}:${{ steps.tagger.outputs.full_sha }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-${{ matrix.service.name }}:${{ steps.tagger.outputs.short_sha }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-${{ matrix.service.name }}:${{ steps.tagger.outputs.version }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-${{ matrix.service.name }}:build-${{ steps.tagger.outputs.datetime }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-${{ matrix.service.name }}:${{ steps.tagger.outputs.version }}-${{ steps.tagger.outputs.short_sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-${{ matrix.service.name }}:${{ steps.tagger.outputs.full_version }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         platforms: linux/amd64,linux/arm64
+
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Prepare staging compose
+      run: |
+        set -eux
+        cp docker-compose.yml docker-compose.staging.yml
+        # Choose tag: prefer version (if not 'dev'), else use datetime
+        VERSION="${{ needs.build-and-push.outputs.version }}"
+        DATETIME="${{ needs.build-and-push.outputs.datetime }}"
+        if [ -n "$VERSION" ] && [ "$VERSION" != "dev" ]; then
+          TAG="$VERSION"
+        else
+          TAG="build-$DATETIME"
+        fi
+        echo "Using tag for staging: $TAG"
+
+        sed -i "s|build: ./Backend/authservice|image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-authservice:${TAG}|g" docker-compose.staging.yml
+        sed -i "s|build: ./Backend/restaurantservice|image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-restaurantservice:${TAG}|g" docker-compose.staging.yml
+        sed -i "s|build: ./Backend/orderservice|image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-orderservice:${TAG}|g" docker-compose.staging.yml
+        sed -i "s|build: ./Backend/apigateway|image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-apigateway:${TAG}|g" docker-compose.staging.yml
+        sed -i "s|build: ./frontend|image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-frontend:${TAG}|g" docker-compose.staging.yml
+
+    - name: Show modified compose
+      run: |
+        echo "--- docker-compose.staging.yml ---"
+        cat docker-compose.staging.yml
+
+    - name: Deploy to staging (placeholder)
+      run: |
+        echo "Deploying docker-compose.staging.yml to staging with tag: $TAG"
+        # Example: docker compose -f docker-compose.staging.yml up -d
+        echo "Images produced:"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-authservice:${TAG}"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-restaurantservice:${TAG}"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-orderservice:${TAG}"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-apigateway:${TAG}"
+        echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-frontend:${TAG}"
 
