@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restaurantservice
+  namespace: food-delivery
+  labels:
+    app: restaurantservice
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: restaurantservice
+  template:
+    metadata:
+      labels:
+        app: restaurantservice
+    spec:
+      containers:
+      - name: restaurantservice
+        image: lasithaharshana/food-delivery-restaurantservice:latest
+        ports:
+        - containerPort: 9093
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SPRING_PROFILES_ACTIVE
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://mysql-restaurant:3306/restaurantdb"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "user"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "password"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9093
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 15
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9093
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: restaurantservice
+  namespace: food-delivery
+  labels:
+    app: restaurantservice
+spec:
+  selector:
+    app: restaurantservice
+  ports:
+  - port: 9093
+    targetPort: 9093
+  type: ClusterIP
