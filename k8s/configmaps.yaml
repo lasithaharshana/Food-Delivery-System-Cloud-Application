@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-auth-config
+  namespace: food-delivery
+data:
+  MYSQL_DATABASE: "auth_db"
+  MYSQL_USER: "authuser"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-restaurant-config
+  namespace: food-delivery
+data:
+  MYSQL_DATABASE: "restaurantdb"
+  MYSQL_USER: "user"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-order-config
+  namespace: food-delivery
+data:
+  MYSQL_DATABASE: "orderdb"
+  MYSQL_USER: "user"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: food-delivery
+data:
+  SPRING_PROFILES_ACTIVE: "docker"
+  # Service URLs for inter-service communication
+  AUTH_SERVICE_URL: "http://authservice:8081"
+  ORDER_SERVICE_URL: "http://orderservice:9094"
+  RESTAURANT_SERVICE_URL: "http://restaurantservice:9093"
