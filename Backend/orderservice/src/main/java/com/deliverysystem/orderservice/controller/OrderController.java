@@ -1,19 +1,24 @@
 package com.deliverysystem.orderservice.controller;
 
-import com.deliverysystem.orderservice.client.RestaurantClient;
+import com.deliverysystem.orderservice.client.FoodClient;
 import com.deliverysystem.orderservice.model.Order;
+import com.deliverysystem.orderservice.model.OrderItem;
 import com.deliverysystem.orderservice.repository.OrderRepository;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.Parameter;
-import org.slf4j.Logger;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/order")
@@ -21,106 +26,175 @@ import java.util.List;
 public class OrderController {
 
     private final OrderRepository repo;
-    private final RestaurantClient restaurantClient;
+    private final FoodClient foodClient;
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
-    public OrderController(OrderRepository repo, RestaurantClient restaurantClient) {
+    public OrderController(OrderRepository repo, FoodClient foodClient) {
         this.repo = repo;
-        this.restaurantClient = restaurantClient;
+        this.foodClient = foodClient;
     }
 
     @GetMapping("/test")
-    @Operation(summary = "Test endpoint", description = "Check if the order service is running")
-    @ApiResponse(responseCode = "200", description = "Service is running")
-    public String testEndpoint() {
-        return "Order Service is running with MySQL!";
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("Order Service is running with MySQL!");
     }
 
     @GetMapping
-    @Operation(summary = "Get all orders", description = "Retrieve a list of all orders")
-    @ApiResponse(responseCode = "200", description = "List of orders retrieved successfully")
-    public List<Order> getAllItems() {
-        return repo.findAll();
+    public ResponseEntity<List<Order>> getAllItems() {
+        return ResponseEntity.ok(repo.findAll());
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get order by ID", description = "Retrieve a specific order by its ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Order found"),
-            @ApiResponse(responseCode = "404", description = "Order not found")
-    })
-    public Order getItem(@Parameter(description = "Order ID") @PathVariable Integer id) {
-        return repo.findById(id).orElse(null);
+    public ResponseEntity<Order> getItem(@PathVariable Long id) {
+        return repo.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @PostMapping
-    @Operation(summary = "Create new order", description = "Place a new order in the system")
+    @PostMapping()
+    @Operation(summary = "Create new Order", description = "Add a new Order")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Order created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data or restaurant does not exist")
+            @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
-    public ResponseEntity<?> createItem(@RequestBody Order item) {
+    public ResponseEntity<?> createItem(@RequestBody Order order) {
         try {
-            // ✅ Validate restaurant ID using RestaurantClient
-            Boolean exists = restaurantClient.checkRestaurantExists(item.getRestaurantId());
-            if (exists == null || !exists) {
-                return ResponseEntity.badRequest().body("Invalid restaurant ID: " + item.getRestaurantId());
+            logger.info("Creating order: {}", order);
+
+            // Validate order
+            if (order == null || order.getOrderItems().isEmpty()) {
+                return ResponseEntity.badRequest().body("Invalid order data");
             }
-            logger.info("Creating order for restaurant ID: {}", item.getRestaurantId());
-            logger.debug("Order details: {}", item);
-            return ResponseEntity.status(201).body(repo.save(item));
+
+            // Extract all foodIds and quantities
+            Map<String, Integer> foodQuantities = order.getOrderItems().stream()
+                    .collect(Collectors.toMap(
+                            item -> item.getFoodId().toString(),
+                            OrderItem::getQuantity,
+                            Integer::sum));
+            logger.info("Food quantities extracted: {}", foodQuantities);
+
+            // Batch check food existence
+            Map<Long, Boolean> foodExistMap = foodClient.checkFoodsExist(
+                    order.getOrderItems().stream().map(OrderItem::getFoodId).toList());
+            logger.info("Food existence map: {}", foodExistMap);
+
+            // Validate all items
+            List<Long> invalidIds = order.getOrderItems().stream()
+                    .map(OrderItem::getFoodId)
+                    .filter(id -> !Boolean.TRUE.equals(foodExistMap.get(id)))
+                    .toList();
+            if (!invalidIds.isEmpty()) {
+                return ResponseEntity.badRequest().body("Invalid food IDs: " + invalidIds);
+            }
+
+            // Attach order to items
+            order.getOrderItems().forEach(item -> item.setOrder(order));
+            try {
+                ResponseEntity<String> reduceResponse = foodClient.reduceStock(foodQuantities);
+                if (!reduceResponse.getStatusCode().is2xxSuccessful()) {
+                    return ResponseEntity.status(reduceResponse.getStatusCode())
+                            .body("Failed to reduce stock: " + reduceResponse.getBody());
+                }
+            } catch (Exception e) {
+                logger.error("Error reducing stock: {}", e.getMessage(), e);
+                repo.delete(order); // Rollback order creation
+                throw e;
+            }
+
+            // Save order
+            Order saved = repo.save(order);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+
         } catch (Exception e) {
-            logger.error("Error creating order: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Error creating order: " + e.getMessage());
+            logger.error("Error creating order: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error creating order: " + e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update order", description = "Update an existing order")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Order updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Order not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data or restaurant does not exist")
-    })
-    public ResponseEntity<?> updateItem(@Parameter(description = "Order ID") @PathVariable Integer id,
-                                        @RequestBody Order updated) {
-        return repo.findById(id)
-                .map(item -> {
-                    // ✅ Validate restaurant before updating
-                    Boolean exists = restaurantClient.checkRestaurantExists(updated.getRestaurantId());
-                    if (exists == null || !exists) {
-                        return ResponseEntity.badRequest().body("Invalid restaurant ID: " + updated.getRestaurantId());
+    public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody Order updated) {
+        return repo.findById(id).map(existingOrder -> {
+            try {
+                logger.info("Updating order ID: {}", id);
+
+                if (updated == null || updated.getOrderItems().isEmpty()) {
+                    return ResponseEntity.badRequest().body("Invalid order data");
+                }
+
+                // Extract new quantities
+                Map<String, Integer> newQuantities = updated.getOrderItems().stream()
+                        .collect(Collectors.toMap(
+                                item -> item.getFoodId().toString(),
+                                OrderItem::getQuantity,
+                                Integer::sum));
+
+                // Validate food existence
+                Map<Long, Boolean> foodExistMap = foodClient.checkFoodsExist(
+                        updated.getOrderItems().stream().map(OrderItem::getFoodId).toList());
+                List<Long> invalidIds = updated.getOrderItems().stream()
+                        .map(OrderItem::getFoodId)
+                        .filter(fid -> !Boolean.TRUE.equals(foodExistMap.get(fid)))
+                        .toList();
+                if (!invalidIds.isEmpty()) {
+                    return ResponseEntity.badRequest().body("Invalid food IDs: " + invalidIds);
+                }
+
+                // Save snapshot for rollback
+                Order oldSnapshot = new Order();
+                oldSnapshot.setId(existingOrder.getId());
+                oldSnapshot.setCustomerId(existingOrder.getCustomerId());
+                oldSnapshot.setNote(existingOrder.getNote());
+                oldSnapshot.setStatus(existingOrder.getStatus());
+                oldSnapshot.setCost(existingOrder.getCost());
+                oldSnapshot.setOrderItems(new ArrayList<>(existingOrder.getOrderItems()));
+
+                // Update basic fields
+                existingOrder.setCustomerId(updated.getCustomerId());
+                existingOrder.setNote(updated.getNote());
+                existingOrder.setStatus(updated.getStatus());
+                existingOrder.setCost(updated.getCost());
+
+                // Safe update of collection
+                existingOrder.getOrderItems().clear();
+                for (OrderItem item : updated.getOrderItems()) {
+                    item.setOrder(existingOrder);
+                    existingOrder.getOrderItems().add(item);
+                }
+
+                // Save updated order
+                Order saved = repo.save(existingOrder);
+
+                try {
+                    ResponseEntity<String> reduceResponse = foodClient.reduceStock(newQuantities);
+                    if (!reduceResponse.getStatusCode().is2xxSuccessful()) {
+                        return ResponseEntity.status(reduceResponse.getStatusCode())
+                                .body("Failed to reduce stock: " + reduceResponse.getBody());
                     }
-                    item.setRestaurantId(updated.getRestaurantId());
-                    item.setCustomerId(updated.getCustomerId());
-                    item.setCustomerName(updated.getCustomerName());
-                    item.setCustomerPhoneNumber(updated.getCustomerPhoneNumber());
-                    item.setNote(updated.getNote());
-                    item.setStatus(updated.getStatus());
-                    item.setCost(updated.getCost());
+                } catch (Exception e) {
+                    logger.error("Stock reduction failed, rolling back order {}: {}", id, e.getMessage());
+                    repo.save(oldSnapshot); // rollback
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Failed to reduce stock: " + e.getMessage());
+                }
 
-                    // Clear existing items (orphanRemoval removes them from DB)
-                    item.removeOrderItems();
+                return ResponseEntity.ok(saved);
 
-                    // Add updated items
-                    item.setOrderItems(updated.getOrderItems());
-
-                    return ResponseEntity.ok(repo.save(item));
-                })
-                .orElse(ResponseEntity.notFound().build());
+            } catch (Exception e) {
+                logger.error("Error updating order {}: {}", id, e.getMessage(), e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error updating order: " + e.getMessage());
+            }
+        }).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete order", description = "Cancel/delete an order from the system")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Order deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Order not found")
-    })
-    public ResponseEntity<String> deleteItem(@Parameter(description = "Order ID") @PathVariable Integer id) {
+    public ResponseEntity<?> deleteItem(@PathVariable Long id) {
         if (!repo.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
         }
         repo.deleteById(id);
-        return ResponseEntity.ok("Item deleted");
+        return ResponseEntity.ok("Order deleted successfully");
     }
 }

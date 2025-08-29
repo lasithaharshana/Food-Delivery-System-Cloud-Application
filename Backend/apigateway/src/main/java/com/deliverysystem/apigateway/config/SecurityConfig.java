@@ -50,7 +50,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/health", "/api/info").permitAll()
                 // Protected endpoints
                 .requestMatchers("/api/order/**").hasRole("CUSTOMER")
-                .requestMatchers("/api/restaurants/**").hasRole("RESTAURANT")
+                .requestMatchers("/api/foods/**").hasRole("RESTAURANT")
                 .requestMatchers("/api/user/**").authenticated()
                 .anyRequest().authenticated()
             )

@@ -2,6 +2,27 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AuthserviceApplication",
+            "request": "launch",
+            "mainClass": "com.deliverysystem.authservice.AuthserviceApplication",
+            "projectName": "authservice"
+        },
+        {
+            "type": "java",
+            "name": "FoodserviceApplication",
+            "request": "launch",
+            "mainClass": "com.deliverysystem.foodservice.FoodserviceApplication",
+            "projectName": "foodservice"
+        },
+        {
+            "type": "java",
+            "name": "ApigatewayApplication",
+            "request": "launch",
+            "mainClass": "com.deliverysystem.apigateway.ApigatewayApplication",
+            "projectName": "apigateway"
+        },
+        {
+            "type": "java",
             "name": "RestaurantserviceApplication",
             "request": "launch",
             "mainClass": "com.deliverysystem.restaurantservice.RestaurantserviceApplication",

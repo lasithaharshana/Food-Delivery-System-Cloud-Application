@@ -28,7 +28,7 @@ public class HealthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> info() {
         Map<String, Object> infoData = new HashMap<>();
         infoData.put("service", "Food Delivery System API Gateway");
-        infoData.put("description", "Central gateway routing requests to auth, order, and restaurant services");
+        infoData.put("description", "Central gateway routing requests to auth, order, and food services");
         infoData.put("version", "1.0.0");
         infoData.put("features", new String[]{
             "JWT Authentication",

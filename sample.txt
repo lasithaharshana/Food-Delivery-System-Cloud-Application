@@ -1,4 +1,7 @@
+version: "3.9"
+
 services:
+  # ---------- Databases ----------
   mysql-auth:
     image: mysql:8.0
     container_name: mysql-auth
@@ -58,6 +61,7 @@ services:
       retries: 3
       start_period: 30s
 
+  # ---------- Backend Services ----------
   authservice:
     build: ./backend/authservice
     container_name: authservice
@@ -154,14 +158,15 @@ services:
       retries: 5
       start_period: 180s
 
+  # ---------- Frontend ----------
   frontend:
     build: ./frontend
     container_name: frontend
     ports:
       - "3000:80"
+    restart: unless-stopped
     depends_on:
       - apigateway
-    restart: unless-stopped
 
 volumes:
   mysql_auth_data:

@@ -6,6 +6,8 @@ import com.deliverysystem.authservice.entity.User;
 import com.deliverysystem.authservice.exception.UserAlreadyExistsException;
 import com.deliverysystem.authservice.exception.UserNotFoundException;
 import com.deliverysystem.authservice.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -184,5 +186,15 @@ public class UserService {
                 .restaurantName(user.getRestaurantName())
                 .address(user.getAddress())
                 .build();
+    }
+
+    public boolean isValidRestaurant(Long restaurantId) {
+        return userRepository.existsByIdAndRole(restaurantId, User.Role.RESTAURANT);
+    }
+
+    public User getRestaurantById(Long restaurantId) {
+        return userRepository.findByIdAndRole(restaurantId, User.Role.RESTAURANT)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Restaurant with ID " + restaurantId + " not found"));
     }
 }

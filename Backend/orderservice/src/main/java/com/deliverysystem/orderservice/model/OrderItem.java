@@ -1,9 +1,8 @@
 package com.deliverysystem.orderservice.model;
 
-import jakarta.persistence.*;
-import java.math.BigDecimal;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "order_items")
@@ -11,58 +10,37 @@ public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String itemId;
-    private String name;
+    private Long foodId;
+
     private Integer quantity;
-    private BigDecimal price;
-    @ManyToOne
-    @JoinColumn(name = "order_id")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     @JsonBackReference
     private Order order;
 
-    // Constructors
     public OrderItem() {
     }
 
-    public OrderItem(String name, Integer quantity, BigDecimal price) {
-        this.name = name;
+    public OrderItem(Long foodId, Integer quantity, Order order) {
+        this.foodId = foodId;
         this.quantity = quantity;
-        this.price = price;
-    }
-
-    @PrePersist
-    public void generateItemId() {
-        if (itemId == null) {
-            itemId = java.util.UUID.randomUUID().toString();
-        }
+        this.order = order;
     }
 
     // Getters & Setters
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public Long getFoodId() {
+        return foodId;
     }
 
-    public String getItemId() {
-        return itemId;
-    }
-
-    public void setItemId(String itemId) {
-        this.itemId = itemId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setFoodId(Long foodId) {
+        this.foodId = foodId;
     }
 
     public Integer getQuantity() {
@@ -73,11 +51,19 @@ public class OrderItem {
         this.quantity = quantity;
     }
 
-    public BigDecimal getPrice() {
-        return price;
+    public Order getOrder() {
+        return order;
     }
 
-    public void setPrice(BigDecimal price) {
-        this.price = price;
+    public void setOrder(Order order) {
+        this.order = order;
     }
+
+    public void assignToOrder(Order order) {
+        this.order = order;
+        if (!order.getOrderItems().contains(this)) {
+            order.getOrderItems().add(this);
+        }
+    }
+
 }
