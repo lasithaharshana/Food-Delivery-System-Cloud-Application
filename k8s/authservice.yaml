@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: authservice
-        image: lasithaharshana/food-delivery-authservice:latest
+        image: lasitha6646/food-delivery-authservice:latest
         ports:
         - containerPort: 8081
         env:
