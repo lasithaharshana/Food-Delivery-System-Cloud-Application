@@ -135,6 +135,29 @@ public class AuthService {
         }
     }
     
+    public UserResponse validateTokenAndGetUser(String token) {
+        try {
+            if (!jwtUtil.validateToken(token) || jwtUtil.isTokenExpired(token)) {
+                throw new BadCredentialsException("Invalid or expired token");
+            }
+            
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new BadCredentialsException("User not found"));
+            
+            if (!user.getIsActive()) {
+                throw new BadCredentialsException("User account is deactivated");
+            }
+            
+            log.info("Token validated successfully for user: {}", user.getUsername());
+            return convertToUserResponse(user);
+            
+        } catch (Exception e) {
+            log.error("Token validation and user retrieval failed: {}", e.getMessage());
+            throw new BadCredentialsException("Invalid or expired token");
+        }
+    }
+    
     private UserResponse convertToUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())

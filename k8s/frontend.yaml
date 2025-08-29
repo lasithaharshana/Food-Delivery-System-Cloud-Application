@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: lasithaharshana/food-delivery-frontend:latest
+        image: lasitha6646/food-delivery-frontend:latest
         ports:
         - containerPort: 80
         resources:

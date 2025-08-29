@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: restaurantservice
-        image: lasithaharshana/food-delivery-restaurantservice:latest
+        image: lasitha6646/food-delivery-restaurantservice:latest
         ports:
         - containerPort: 9093
         env:

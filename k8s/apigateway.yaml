@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: apigateway
-        image: lasithaharshana/food-delivery-apigateway:latest
+        image: lasitha6646/food-delivery-apigateway:latest
         ports:
         - containerPort: 8080
         env:
