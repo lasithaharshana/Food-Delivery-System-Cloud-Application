@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: orderservice
-        image: lasithaharshana/food-delivery-orderservice:latest
+        image: lasitha6646/food-delivery-orderservice:latest
         ports:
         - containerPort: 9094
         env:
