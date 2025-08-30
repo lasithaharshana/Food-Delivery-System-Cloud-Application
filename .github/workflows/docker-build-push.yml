@@ -70,7 +70,7 @@ jobs:
       id: tagger
       run: |
         set -eux
-        BASE_VERSION=$(git tag --sort=-v:refname | head -n 1)
+        BASE_VERSION=$(git tag --sort=-v:refname | head -n 1 || echo "dev")
         DATE=$(date -u +"%Y%m%d")
         TIME=$(date -u +"%H%M%S")
         DATETIME="${DATE}-${TIME}"
@@ -80,7 +80,7 @@ jobs:
         if [ "$BASE_VERSION" = "dev" ]; then
           FULL_VERSION="dev-${DATETIME}"
         else
-          FULL_VERSION="${BASE_VERSION}.${DATETIME}"
+          FULL_VERSION="${BASE_VERSION}-${DATETIME}"
         fi
 
         echo "version=${BASE_VERSION}" >> $GITHUB_OUTPUT
