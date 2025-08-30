@@ -23,9 +23,9 @@ jobs:
           - name: authservice
             context: ./Backend/authservice
             dockerfile: ./Backend/authservice/Dockerfile
-          - name: restaurantservice
-            context: ./Backend/restaurantservice
-            dockerfile: ./Backend/restaurantservice/Dockerfile
+          - name: foodservice
+            context: ./Backend/foodservice
+            dockerfile: ./Backend/foodservice/Dockerfile
           - name: orderservice
             context: ./Backend/orderservice
             dockerfile: ./Backend/orderservice/Dockerfile

@@ -137,47 +137,6 @@ public class FoodController {
         return ResponseEntity.ok(exists);
     }
 
-    @PostMapping("/exists")
-    public ResponseEntity<Map<Long, Boolean>> checkFoodsExist(@RequestBody List<Long> foodIds) {
-        Map<Long, Boolean> result = foodIds.stream()
-                .distinct()
-                .collect(Collectors.toMap(id -> id, id -> repo.existsById(id)));
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/reduce-stock")
-    public ResponseEntity<?> reduceStock(@RequestBody Map<String, Integer> foodQuantities) {
-        try {
-            for (Map.Entry<String, Integer> entry : foodQuantities.entrySet()) {
-                Long foodId = Long.parseLong(entry.getKey());
-                Integer reduceBy = entry.getValue();
-                logger.info("Reducing stock for food ID: {}, Quantity: {}", foodId, reduceBy);
-
-                Food food = repo.findById(foodId)
-                        .orElseThrow(() -> new IllegalArgumentException("Food not found: " + foodId));
-
-                if (reduceBy < 0) {
-                    return ResponseEntity.badRequest()
-                            .body(Map.of("error", "Quantity to reduce must be positive for food ID: " + foodId));
-                }
-
-                double currentQty = food.getQuantity() != null ? food.getQuantity() : 0;
-                if (currentQty < reduceBy) {
-                    return ResponseEntity.badRequest()
-                            .body(Map.of("error", "Not enough stock for food ID: " + foodId));
-                }
-
-                food.setQuantity(currentQty - reduceBy);
-                repo.save(food);
-            }
-
-            return ResponseEntity.ok(Map.of("message", "Stock reduced successfully"));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("Arg error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
-        }
-    }
+    
 
 }

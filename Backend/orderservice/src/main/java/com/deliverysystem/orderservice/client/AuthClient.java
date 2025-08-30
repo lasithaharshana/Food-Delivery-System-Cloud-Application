@@ -12,8 +12,8 @@ import com.deliverysystem.orderservice.config.FeignConfig;
 @FeignClient(name = "authservice", url = "http://apigateway:8080", configuration = FeignConfig.class)
 public interface AuthClient {
 
-    @GetMapping("/api/auth/userinfo")
-    Object getUserInfo();
+    @GetMapping("/api/auth/validate")
+    Object validateToken(String token);
 
     @GetMapping("/api/users/check-restaurant/{restaurantId}")
     Map<String, Boolean> checkRestaurantExists(@PathVariable("restaurantId") Long restaurantId);

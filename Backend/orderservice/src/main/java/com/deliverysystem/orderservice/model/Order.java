@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -24,13 +25,16 @@ public class Order {
     private Long id;
 
     @Column(nullable = false)
+    private Long restaurantId;
+
+    @Column(nullable = false)
     private Long customerId;
 
     private String note;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.PENDING; // default PENDING
 
     private Double cost;
 
@@ -42,6 +46,17 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    public Order() {
+    }
+
+    public Order(Long restaurantId, String note,
+            Double cost, List<OrderItem> orderItems) {
+        this.restaurantId = restaurantId;
+        this.note = note;
+        this.cost = cost;
+        this.orderItems = orderItems;
+    }
 
     @PrePersist
     public void prePersist() {
@@ -57,29 +72,6 @@ public class Order {
         updatedAt = LocalDateTime.now();
     }
 
-    public Order() {
-        
-    }
-
-    public Order(Long customerId, String note, OrderStatus status, Double cost, List<OrderItem> orderItems) {
-        this.customerId = customerId;
-        this.note = note;
-        setStatus(status);
-        this.cost = cost;
-        this.orderItems = new ArrayList<>();
-        if (orderItems != null) {
-            orderItems.forEach(this::addOrderItem);
-        }
-    }
-
-    public void setStatus(OrderStatus status) {
-        if (status == null) {
-            this.status = OrderStatus.PENDING; // default
-        } else {
-            this.status = status;
-        }
-    }
-
     // Getters and Setters
     public Long getId() {
         return id;
@@ -87,6 +79,14 @@ public class Order {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
     }
 
     public Long getCustomerId() {
@@ -107,6 +107,10 @@ public class Order {
 
     public OrderStatus getStatus() {
         return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
     }
 
     public Double getCost() {
@@ -133,18 +137,13 @@ public class Order {
         this.orderItems = orderItems;
     }
 
-    public void addOrderItem(OrderItem item) {
-        orderItems.add(item);
-        item.setOrder(this);
+    public void removeOrderItems() {
+        for (OrderItem item : new ArrayList<>(orderItems)) {
+            removeOrderItem(item);
+        }
     }
 
     public void removeOrderItem(OrderItem item) {
         orderItems.remove(item);
-        item.setOrder(null);
-    }
-
-    public void removeOrderItems() {
-        orderItems.forEach(item -> item.setOrder(null));
-        orderItems.clear();
     }
 }

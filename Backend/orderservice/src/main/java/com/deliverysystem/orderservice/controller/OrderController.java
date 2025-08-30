@@ -1,6 +1,7 @@
 package com.deliverysystem.orderservice.controller;
 
 import com.deliverysystem.orderservice.client.FoodClient;
+import com.deliverysystem.orderservice.client.AuthClient;
 import com.deliverysystem.orderservice.model.Order;
 import com.deliverysystem.orderservice.model.OrderItem;
 import com.deliverysystem.orderservice.repository.OrderRepository;
@@ -27,11 +28,14 @@ public class OrderController {
 
     private final OrderRepository repo;
     private final FoodClient foodClient;
+    private final AuthClient authClient;
+
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
-    public OrderController(OrderRepository repo, FoodClient foodClient) {
+    public OrderController(OrderRepository repo, FoodClient foodClient, AuthClient authClient) {
         this.repo = repo;
         this.foodClient = foodClient;
+        this.authClient = authClient;
     }
 
     @GetMapping("/test")
@@ -51,22 +55,32 @@ public class OrderController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @PostMapping()
+    @PostMapping
     @Operation(summary = "Create new Order", description = "Add a new Order")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Order created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
-    public ResponseEntity<?> createItem(@RequestBody Order order) {
+    public ResponseEntity<?> createItem(@RequestBody Order order, @RequestHeader("Authorization") String authorizationHeader) {
         try {
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header");
+            }
+            String token = authorizationHeader.substring(7);
+
+            // Validate token
+            Object customer = authClient.validateToken(token);
+            logger.info("Validating customer: {}", customer);
             logger.info("Creating order: {}", order);
 
-            // Validate order
+            if (customer == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid customer");
+            }
+
             if (order == null || order.getOrderItems().isEmpty()) {
                 return ResponseEntity.badRequest().body("Invalid order data");
             }
 
-            // Extract all foodIds and quantities
             Map<String, Integer> foodQuantities = order.getOrderItems().stream()
                     .collect(Collectors.toMap(
                             item -> item.getFoodId().toString(),
@@ -74,22 +88,21 @@ public class OrderController {
                             Integer::sum));
             logger.info("Food quantities extracted: {}", foodQuantities);
 
-            // Batch check food existence
             Map<Long, Boolean> foodExistMap = foodClient.checkFoodsExist(
                     order.getOrderItems().stream().map(OrderItem::getFoodId).toList());
             logger.info("Food existence map: {}", foodExistMap);
 
-            // Validate all items
             List<Long> invalidIds = order.getOrderItems().stream()
                     .map(OrderItem::getFoodId)
                     .filter(id -> !Boolean.TRUE.equals(foodExistMap.get(id)))
                     .toList();
+
             if (!invalidIds.isEmpty()) {
                 return ResponseEntity.badRequest().body("Invalid food IDs: " + invalidIds);
             }
 
-            // Attach order to items
             order.getOrderItems().forEach(item -> item.setOrder(order));
+
             try {
                 ResponseEntity<String> reduceResponse = foodClient.reduceStock(foodQuantities);
                 if (!reduceResponse.getStatusCode().is2xxSuccessful()) {
@@ -98,11 +111,10 @@ public class OrderController {
                 }
             } catch (Exception e) {
                 logger.error("Error reducing stock: {}", e.getMessage(), e);
-                repo.delete(order); // Rollback order creation
+                repo.delete(order); // Rollback
                 throw e;
             }
 
-            // Save order
             Order saved = repo.save(order);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 
@@ -123,20 +135,20 @@ public class OrderController {
                     return ResponseEntity.badRequest().body("Invalid order data");
                 }
 
-                // Extract new quantities
                 Map<String, Integer> newQuantities = updated.getOrderItems().stream()
                         .collect(Collectors.toMap(
                                 item -> item.getFoodId().toString(),
                                 OrderItem::getQuantity,
                                 Integer::sum));
 
-                // Validate food existence
                 Map<Long, Boolean> foodExistMap = foodClient.checkFoodsExist(
                         updated.getOrderItems().stream().map(OrderItem::getFoodId).toList());
+
                 List<Long> invalidIds = updated.getOrderItems().stream()
                         .map(OrderItem::getFoodId)
                         .filter(fid -> !Boolean.TRUE.equals(foodExistMap.get(fid)))
                         .toList();
+
                 if (!invalidIds.isEmpty()) {
                     return ResponseEntity.badRequest().body("Invalid food IDs: " + invalidIds);
                 }
@@ -150,20 +162,18 @@ public class OrderController {
                 oldSnapshot.setCost(existingOrder.getCost());
                 oldSnapshot.setOrderItems(new ArrayList<>(existingOrder.getOrderItems()));
 
-                // Update basic fields
+                // Update fields
                 existingOrder.setCustomerId(updated.getCustomerId());
                 existingOrder.setNote(updated.getNote());
                 existingOrder.setStatus(updated.getStatus());
                 existingOrder.setCost(updated.getCost());
 
-                // Safe update of collection
                 existingOrder.getOrderItems().clear();
                 for (OrderItem item : updated.getOrderItems()) {
                     item.setOrder(existingOrder);
                     existingOrder.getOrderItems().add(item);
                 }
 
-                // Save updated order
                 Order saved = repo.save(existingOrder);
 
                 try {
@@ -197,4 +207,47 @@ public class OrderController {
         repo.deleteById(id);
         return ResponseEntity.ok("Order deleted successfully");
     }
+
+    // @PostMapping("/exists")
+    // public ResponseEntity<Map<Long, Boolean>> checkFoodsExist(@RequestBody List<Long> foodIds) {
+    //     Map<Long, Boolean> result = foodIds.stream()
+    //             .distinct()
+    //             .collect(Collectors.toMap(id -> id, id -> repo.existsById(id)));
+    //     return ResponseEntity.ok(result);
+    // }
+
+    // @PostMapping("/reduce-stock")
+    // public ResponseEntity<?> reduceStock(@RequestBody Map<String, Integer> foodQuantities) {
+    //     try {
+    //         for (Map.Entry<String, Integer> entry : foodQuantities.entrySet()) {
+    //             Long foodId = Long.parseLong(entry.getKey());
+    //             Integer reduceBy = entry.getValue();
+    //             logger.info("Reducing stock for food ID: {}, Quantity: {}", foodId, reduceBy);
+
+    //             Food food = repo.findById(foodId)
+    //                     .orElseThrow(() -> new IllegalArgumentException("Food not found: " + foodId));
+
+    //             if (reduceBy < 0) {
+    //                 return ResponseEntity.badRequest()
+    //                         .body(Map.of("error", "Quantity to reduce must be positive for food ID: " + foodId));
+    //             }
+
+    //             double currentQty = food.getQuantity() != null ? food.getQuantity() : 0;
+    //             if (currentQty < reduceBy) {
+    //                 return ResponseEntity.badRequest()
+    //                         .body(Map.of("error", "Not enough stock for food ID: " + foodId));
+    //             }
+
+    //             food.setQuantity(currentQty - reduceBy);
+    //             repo.save(food);
+    //         }
+
+    //         return ResponseEntity.ok(Map.of("message", "Stock reduced successfully"));
+
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("Arg error", e.getMessage()));
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+    //     }
+    // }
 }
