@@ -9,7 +9,7 @@ echo 🔧 Deleting services...
 kubectl delete -f frontend.yaml --ignore-not-found=true
 kubectl delete -f apigateway.yaml --ignore-not-found=true
 kubectl delete -f orderservice.yaml --ignore-not-found=true
-kubectl delete -f restaurantservice.yaml --ignore-not-found=true
+kubectl delete -f foodservice.yaml --ignore-not-found=true
 kubectl delete -f authservice.yaml --ignore-not-found=true
 
 REM Delete databases

@@ -25,7 +25,7 @@ kubectl apply -f mysql-deployments.yaml
 # Wait for databases to be ready
 echo " Waiting for databases to be ready..."
 kubectl wait --for=condition=ready pod -l app=mysql-auth -n food-delivery --timeout=300s
-kubectl wait --for=condition=ready pod -l app=mysql-restaurant -n food-delivery --timeout=300s
+kubectl wait --for=condition=ready pod -l app=mysql-food -n food-delivery --timeout=300s
 kubectl wait --for=condition=ready pod -l app=mysql-order -n food-delivery --timeout=300s
 
 # Deploy services in order
@@ -35,11 +35,11 @@ kubectl apply -f authservice.yaml
 echo " Waiting for Auth Service to be ready..."
 kubectl wait --for=condition=ready pod -l app=authservice -n food-delivery --timeout=300s
 
-echo " Deploying Restaurant Service..."
-kubectl apply -f restaurantservice.yaml
+echo " Deploying food Service..."
+kubectl apply -f foodservice.yaml
 
-echo " Waiting for Restaurant Service to be ready..."
-kubectl wait --for=condition=ready pod -l app=restaurantservice -n food-delivery --timeout=300s
+echo " Waiting for food Service to be ready..."
+kubectl wait --for=condition=ready pod -l app=foodservice -n food-delivery --timeout=300s
 
 echo " Deploying Order Service..."
 kubectl apply -f orderservice.yaml

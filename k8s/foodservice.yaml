@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: restaurantservice
+  name: foodservice
   namespace: food-delivery
   labels:
-    app: restaurantservice
+    app: foodservice
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: restaurantservice
+      app: foodservice
   template:
     metadata:
       labels:
-        app: restaurantservice
+        app: foodservice
     spec:
       containers:
-      - name: restaurantservice
-        image: lasitha6646/food-delivery-restaurantservice:latest
+      - name: foodservice
+        image: lasitha6646/food-delivery-foodservice:latest
         ports:
         - containerPort: 9093
         env:
@@ -27,7 +27,7 @@ spec:
               name: app-config
               key: SPRING_PROFILES_ACTIVE
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://mysql-restaurant:3306/restaurantdb"
+          value: "jdbc:mysql://mysql-food:3306/fooddb"
         - name: SPRING_DATASOURCE_USERNAME
           value: "user"
         - name: SPRING_DATASOURCE_PASSWORD
@@ -60,13 +60,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: restaurantservice
+  name: foodservice
   namespace: food-delivery
   labels:
-    app: restaurantservice
+    app: foodservice
 spec:
   selector:
-    app: restaurantservice
+    app: foodservice
   ports:
   - port: 9093
     targetPort: 9093
