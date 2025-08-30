@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(
     name = "authservice",
-    url = "http://apigateway:8080",
+    url = "http://localhost:8081",
     configuration = FeignConfig.class
 )
 public interface AuthClient {

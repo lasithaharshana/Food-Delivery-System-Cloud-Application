@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.deliverysystem.orderservice.config.FeignConfig;
 
-@FeignClient(name = "foodservice", url = "http://apigateway:8080", configuration = FeignConfig.class)
+@FeignClient(name = "foodservice", url = "http://foodservice:9093", configuration = FeignConfig.class)
 public interface FoodClient {
 
     @GetMapping("/api/foods/{foodId}/exists")

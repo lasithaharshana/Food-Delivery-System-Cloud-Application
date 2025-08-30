@@ -25,9 +25,6 @@ public class Order {
     private Long id;
 
     @Column(nullable = false)
-    private Long restaurantId;
-
-    @Column(nullable = false)
     private Long customerId;
 
     private String note;
@@ -48,11 +45,10 @@ public class Order {
     private List<OrderItem> orderItems = new ArrayList<>();
 
     public Order() {
+        // Default constructor
     }
 
-    public Order(Long restaurantId, String note,
-            Double cost, List<OrderItem> orderItems) {
-        this.restaurantId = restaurantId;
+    public Order(String note, Double cost, List<OrderItem> orderItems) {
         this.note = note;
         this.cost = cost;
         this.orderItems = orderItems;
@@ -81,13 +77,6 @@ public class Order {
         this.id = id;
     }
 
-    public Long getRestaurantId() {
-        return restaurantId;
-    }
-
-    public void setRestaurantId(Long restaurantId) {
-        this.restaurantId = restaurantId;
-    }
 
     public Long getCustomerId() {
         return customerId;
