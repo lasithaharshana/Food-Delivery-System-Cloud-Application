@@ -6,6 +6,8 @@ import com.deliverysystem.authservice.dto.RegisterRequest;
 import com.deliverysystem.authservice.dto.UserResponse;
 import com.deliverysystem.authservice.dto.ValidateTokenRequest;
 import com.deliverysystem.authservice.service.AuthService;
+import com.deliverysystem.authservice.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Register a new user with role (CUSTOMER or RESTAURANT). Restaurant users must provide restaurant details.")
@@ -92,9 +95,20 @@ public class AuthController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         return ResponseEntity.ok(Map.of(
-            "username", userDetails.getUsername(),
-            "authorities", userDetails.getAuthorities()
-        ));
+                "username", userDetails.getUsername(),
+                "authorities", userDetails.getAuthorities()));
+    }
+    
+    @GetMapping("/check-restaurant/{restaurantId}")
+    @Operation(summary = "Check if restaurant is valid")
+    public ResponseEntity<Map<String, Object>> checkRestaurant(
+            @PathVariable Long restaurantId) {
+
+        boolean valid = userService.isValidRestaurant(restaurantId);
+
+        return ResponseEntity.ok(Map.of(
+                "restaurantId", restaurantId,
+                "valid", valid));
     }
 
 }

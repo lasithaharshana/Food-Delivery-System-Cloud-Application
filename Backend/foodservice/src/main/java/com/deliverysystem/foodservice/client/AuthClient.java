@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(
     name = "authservice",
-    url = "http://localhost:8081",
+    url = "http://authservice:8081",
     configuration = FeignConfig.class
 )
 public interface AuthClient {
@@ -15,7 +15,7 @@ public interface AuthClient {
     @GetMapping("/api/auth/userinfo")
     Object getUserInfo();
 
-    @GetMapping("/api/users/check-restaurant/{restaurantId}")
+    @GetMapping("/api/auth/check-restaurant/{restaurantId}")
     Map<String, Object> checkRestaurantExists(@PathVariable("restaurantId") String restaurantId);
 
 }
