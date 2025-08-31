@@ -65,7 +65,8 @@ public class AuthService {
                 .phoneNumber(request.getPhoneNumber())
                 .role(request.getRole())
                 .restaurantName(request.getRole() == User.Role.RESTAURANT ? request.getRestaurantName() : null)
-                .address(request.getAddress()) 
+                .address(request.getAddress())
+                .imageUrl(request.getImageUrl())
                 .isActive(true)
                 .build();
         
@@ -172,6 +173,7 @@ public class AuthService {
                 .updatedAt(user.getUpdatedAt())
                 .restaurantName(user.getRestaurantName())
                 .address(user.getAddress())
+                .imageUrl(user.getImageUrl())
                 .build();
     }
 }
