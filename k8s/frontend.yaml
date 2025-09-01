@@ -20,6 +20,9 @@ spec:
         image: lasitha6646/food-delivery-frontend:latest
         ports:
         - containerPort: 80
+        env:
+        - name: VITE_API_URL
+          value: "http://localhost:8080"
         resources:
           requests:
             memory: "256Mi"

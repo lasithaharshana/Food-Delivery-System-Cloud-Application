@@ -155,13 +155,18 @@ services:
       start_period: 180s
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080
     container_name: frontend
     ports:
       - "3000:80"
     depends_on:
       - apigateway
     restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:8080
 
 volumes:
   mysql_auth_data:
