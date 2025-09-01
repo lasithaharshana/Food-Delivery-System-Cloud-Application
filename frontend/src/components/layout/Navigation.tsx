@@ -32,14 +32,14 @@ const Navigation = () => {
         return [
           { to: '/restaurant', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
           { to: '/restaurant/menu', label: 'Menu', icon: <UtensilsCrossed className="w-4 h-4" /> },
-          { to: '/restaurant/orders', label: 'Orders', icon: <ShoppingBag className="w-4 h-4" /> },
+// ...existing code...
         ];
       default:
         return [
           { to: '/dashboard', label: 'Browse', icon: <Home className="w-4 h-4" /> },
           { to: '/my-orders', label: 'My Orders', icon: <ShoppingBag className="w-4 h-4" /> },
           { to: '/profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
-          { to: '/debug', label: 'Debug', icon: <User className="w-4 h-4" /> },
+// ...existing code...
         ];
     }
   };

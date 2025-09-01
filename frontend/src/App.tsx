@@ -8,7 +8,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import MyOrders from "./pages/MyOrders";
 import RestaurantDetail from "./pages/RestaurantDetail";
-import Debug from "./pages/Debug";
+// ...existing code...
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,7 +31,7 @@ const App = () => (
             <Route path="/restaurant/orders" element={<Index />} />
             <Route path="/admin" element={<Index />} />
             <Route path="/restaurant/:id" element={<RestaurantDetail />} />
-            <Route path="/debug" element={<Debug />} />
+// ...existing code...
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

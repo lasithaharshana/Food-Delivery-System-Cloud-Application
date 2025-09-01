@@ -271,12 +271,12 @@ const RestaurantDetail = () => {
                     <CardContent className="p-4">
                       <div className="flex gap-4">
                         <img
-                          src={food.imageUrl || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=100'}
+                          src={food.imageUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'}
                           alt={food.name}
                           className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=100';
+                            target.src = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400';
                           }}
                         />
                         <div className="flex-1">

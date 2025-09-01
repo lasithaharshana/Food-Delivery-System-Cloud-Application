@@ -106,12 +106,25 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ orders, onUpdateOrder
 
   const handleStatusUpdate = async (orderId: string | number, newStatus: string) => {
     try {
-      // Update order status via API
-      await orderApi.updateOrderStatus(Number(orderId), { status: newStatus });
-      
+      // Find the full order object
+      const order = orders.find(o => o.id === orderId || o.id === Number(orderId));
+      if (!order) throw new Error('Order not found');
+
+      // Prepare the payload for backend (ensure all required fields are present)
+      const payload = {
+        id: typeof order.id === 'string' ? Number(order.id) : order.id,
+        customerId: order.customerId || 1, // fallback if missing, ideally should be set
+        note: order.note || '',
+        status: newStatus,
+        cost: order.cost || order.total || 0,
+        orderItems: order.orderItems || [],
+      };
+
+      await orderApi.updateOrderStatus(payload.id, payload);
+
       // Update local state
       onUpdateOrderStatus(orderId, newStatus);
-      
+
       // Show appropriate notification based on status
       const orderNumber = `#${orderId}`;
       switch (newStatus.toUpperCase()) {
