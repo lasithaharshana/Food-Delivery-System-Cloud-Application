@@ -48,9 +48,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/api/health", "/api/info").permitAll()
-                // Protected endpoints
-                .requestMatchers("/api/order/**").hasRole("CUSTOMER")
-                .requestMatchers("/api/foods/**").hasRole("RESTAURANT")
+                
+                .requestMatchers("/api/order/**").authenticated()
+                .requestMatchers("/api/foods/**").authenticated()
                 .requestMatchers("/api/user/**").authenticated()
                 .anyRequest().authenticated()
             )
