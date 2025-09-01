@@ -1,9 +1,11 @@
-// Use environment variable or default to API Gateway port
-export const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:8080';
+export const API_BASE_URL = 'http://localhost:8080'; 
 
 // Auth endpoints through API Gateway
 export const API_AUTH_REGISTER = `${API_BASE_URL}/api/auth/register`;
 export const API_AUTH_LOGIN = `${API_BASE_URL}/api/auth/login`;
+
+// Food - Use relative URL to go through proxy
+export const API_FOODS = `${API_BASE_URL}/foods`;
 
 // Food endpoints through API Gateway
 export const API_FOOD_LIST = `${API_BASE_URL}/api/foods`;

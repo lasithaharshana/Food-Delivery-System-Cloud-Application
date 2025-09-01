@@ -37,4 +37,7 @@ public class UpdateUserRequest {
     
     @Schema(description = "User address", example = "456 New St, City")
     private String address;
+    
+    @Schema(description = "Profile image URL", example = "https://example.com/new-profile.jpg")
+    private String imageUrl;
 }

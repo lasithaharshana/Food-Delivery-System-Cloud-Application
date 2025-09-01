@@ -56,4 +56,7 @@ public class RegisterRequest {
     // Additional fields for restaurant owners
     @Schema(description = "Restaurant name (required only for RESTAURANT role)", example = "John's Restaurant")
     private String restaurantName;
+    
+    @Schema(description = "Profile image URL", example = "https://example.com/profile.jpg")
+    private String imageUrl;
 }

@@ -22,6 +22,7 @@ interface MenuItem {
   name: string;
   description: string;
   price: number;
+  quantity: number;
   category: string;
   image: string;
   status: 'active' | 'inactive';

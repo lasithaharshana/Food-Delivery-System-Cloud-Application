@@ -51,4 +51,7 @@ public class UserResponse {
     
     @Schema(description = "User address")
     private String address;
+    
+    @Schema(description = "Profile image URL", example = "https://example.com/profile.jpg")
+    private String imageUrl;
 }

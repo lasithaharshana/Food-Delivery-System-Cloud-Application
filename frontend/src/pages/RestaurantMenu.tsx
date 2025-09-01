@@ -1,63 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import Navigation from '@/components/layout/Navigation';
 import MenuManagement from '@/components/restaurant/MenuManagement';
 import AddItemModal from '@/components/restaurant/AddItemModal';
+import { foodApi, Food } from '@/lib/api-service';
+import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 
-// Mock menu items data
-const mockMenuItems = [
-  {
-    id: '1',
-    name: 'Margherita Pizza',
-    description: 'Fresh tomato sauce, mozzarella, and basil on a crispy crust',
-    price: 18.99,
-    category: 'Pizza',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300',
-    status: 'active' as const,
-    popular: true,
-    orders: 156
-  },
-  {
-    id: '2',
-    name: 'Caesar Salad',
-    description: 'Crisp romaine lettuce with parmesan cheese and croutons',
-    price: 12.99,
-    category: 'Salads',
-    image: 'https://images.unsplash.com/photo-1551248429-40975aa4de74?w=300',
-    status: 'active' as const,
-    popular: false,
-    orders: 89
-  },
-  {
-    id: '3',
-    name: 'Beef Burger',
-    description: 'Juicy beef patty with lettuce, tomato, and our special sauce',
-    price: 15.99,
-    category: 'Burgers',
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300',
-    status: 'inactive' as const,
-    popular: false,
-    orders: 67
-  },
-  {
-    id: '4',
-    name: 'Chicken Tikka',
-    description: 'Tender marinated chicken with aromatic spices',
-    price: 22.99,
-    category: 'Main Course',
-    image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=300',
-    status: 'active' as const,
-    popular: true,
-    orders: 134
-  }
-];
+// Interface for menu items with orders count
+interface MenuItemWithOrders {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  category: string;
+  image: string;
+  status: 'active' | 'inactive';
+  popular: boolean;
+  orders: number;
+}
 
 const RestaurantMenu = () => {
   const { user } = useAuth();
-  const [menuItems, setMenuItems] = useState(mockMenuItems);
+  const [menuItems, setMenuItems] = useState<MenuItemWithOrders[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch menu items from API
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        if (!user) return;
+        const foods: Food[] = await foodApi.getFoodsByRestaurant(user.id);
+        const itemsWithOrders: MenuItemWithOrders[] = foods.map(food => ({
+          id: food.id.toString(),
+          name: food.name,
+          description: food.description,
+          price: food.price,
+          quantity: food.quantity,
+          category: food.category,
+          image: food.imageUrl,
+          status: food.status === 'available' ? 'active' : 'inactive',
+          popular: food.popular,
+          orders: Math.floor(Math.random() * 100),
+        }));
+        setMenuItems(itemsWithOrders);
+      } catch (error) {
+        console.error('Failed to fetch menu items:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load menu items",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchMenuItems();
+    }
+  }, [user, toast]);
   
 
   const handleUpdateItem = (id: string, updates: any) => {
@@ -72,13 +78,46 @@ const RestaurantMenu = () => {
     setMenuItems(items => items.filter(item => item.id !== id));
   };
 
-  const handleAddItem = (newItem: any) => {
-    const item = {
-      ...newItem,
-      id: Date.now().toString(),
-      orders: 0
-    };
-    setMenuItems(items => [...items, item]);
+  const handleAddItem = async (newItem: any) => {
+    try {
+      const created = await foodApi.createFood({
+        name: newItem.name,
+        description: newItem.description,
+        price: newItem.price,
+        quantity: newItem.quantity,
+        category: newItem.category,
+        imageUrl: newItem.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400',
+        status: newItem.status === 'active' ? 'available' : 'unavailable',
+        popular: newItem.popular,
+      });
+
+      const item: MenuItemWithOrders = {
+        id: created.id.toString(),
+        name: created.name,
+        description: created.description,
+        price: created.price,
+        quantity: created.quantity,
+        category: created.category,
+        image: created.imageUrl,
+        status: created.status === 'available' ? 'active' : 'inactive',
+        popular: created.popular,
+        orders: 0,
+      };
+
+      setMenuItems(items => [...items, item]);
+      
+      toast({
+        title: "Success",
+        description: `${newItem.name} has been added to your menu successfully`,
+      });
+    } catch (error) {
+      console.error('Failed to add food item:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to add food item',
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -157,11 +196,17 @@ const RestaurantMenu = () => {
         </div>
 
         {/* Menu Management Component */}
-        <MenuManagement
-          items={menuItems}
-          onUpdateItem={handleUpdateItem}
-          onDeleteItem={handleDeleteItem}
-        />
+        {isLoading ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading menu items...</p>
+          </div>
+        ) : (
+          <MenuManagement
+            items={menuItems}
+            onUpdateItem={handleUpdateItem}
+            onDeleteItem={handleDeleteItem}
+          />
+        )}
 
         {/* Add Item Modal */}
         <AddItemModal

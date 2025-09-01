@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { useNotifications } from '@/hooks/use-notifications';
 import { Plus, X, Upload } from 'lucide-react';
 
@@ -14,6 +14,7 @@ interface MenuItem {
   name: string;
   description: string;
   price: number;
+  quantity: number;
   category: string;
   image: string;
   status: 'active' | 'inactive';
@@ -30,6 +31,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
     name: '',
     description: '',
     price: '',
+    quantity: '20',
     category: '',
     image: '',
     status: 'active' as const,
@@ -51,6 +53,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
+      quantity: parseInt(formData.quantity),
       category: formData.category,
       image: formData.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400',
       status: formData.status,
@@ -58,14 +61,13 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
     };
 
     onAddItem(newItem);
-    
-    notifications.success(`${formData.name} has been added to your menu successfully`);
 
     // Reset form
     setFormData({
       name: '',
       description: '',
       price: '',
+      quantity: '20',
       category: '',
       image: '',
       status: 'active',
@@ -90,6 +92,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Menu Item</DialogTitle>
+          <DialogDescription>
+            Fill in the details below to add a new item to your restaurant menu.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -131,20 +136,33 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
             </div>
 
             <div>
-              <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="quantity">Quantity *</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="1"
+                value={formData.quantity}
+                onChange={(e) => handleInputChange('quantity', e.target.value)}
+                placeholder="20"
+                required
+              />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="category">Category *</Label>
+            <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

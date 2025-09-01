@@ -74,6 +74,9 @@ public class User {
     @Column(name = "address")
     private String address;
     
+    @Column(name = "image_url")
+    private String imageUrl;
+    
     public enum Role {
         CUSTOMER,
         RESTAURANT
