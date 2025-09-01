@@ -37,8 +37,9 @@ const Navigation = () => {
       default:
         return [
           { to: '/dashboard', label: 'Browse', icon: <Home className="w-4 h-4" /> },
-          { to: '/orders', label: 'My Orders', icon: <ShoppingBag className="w-4 h-4" /> },
+          { to: '/my-orders', label: 'My Orders', icon: <ShoppingBag className="w-4 h-4" /> },
           { to: '/profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
+          { to: '/debug', label: 'Debug', icon: <User className="w-4 h-4" /> },
         ];
     }
   };

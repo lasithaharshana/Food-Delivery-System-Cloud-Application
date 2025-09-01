@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ import {
   ChefHat,
   ListOrdered
 } from 'lucide-react';
+import { foodApi, orderApi, userApi, Food, Order as ApiOrder } from '@/lib/api-service';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data for restaurant dashboard
 const stats = [
@@ -50,53 +52,26 @@ const stats = [
   },
 ];
 
-// Mock data for restaurant dashboard
-const initialMenuItems = [
-  {
-    id: '1',
-    name: 'Margherita Pizza',
-    description: 'Fresh tomatoes, mozzarella cheese, fresh basil, olive oil',
-    price: 18.99,
-    category: 'Pizza',
-    image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=300',
-    status: 'active' as const,
-    popular: true,
-    orders: 45,
-  },
-  {
-    id: '2',
-    name: 'Pepperoni Pizza',
-    description: 'Pepperoni, mozzarella cheese, tomato sauce',
-    price: 21.99,
-    category: 'Pizza',
-    image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=300',
-    status: 'active' as const,
-    popular: true,
-    orders: 67,
-  },
-  {
-    id: '3',
-    name: 'Caesar Salad',
-    description: 'Crisp romaine lettuce, parmesan cheese, croutons, caesar dressing',
-    price: 12.99,
-    category: 'Salad',
-    image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=300',
-    status: 'active' as const,
-    popular: false,
-    orders: 23,
-  },
-  {
-    id: '4',
-    name: 'Garlic Bread',
-    description: 'Fresh baked bread with garlic butter and herbs',
-    price: 6.99,
-    category: 'Appetizer',
-    image: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=300',
-    status: 'inactive' as const,
-    popular: false,
-    orders: 15,
-  },
-];
+// Interface for menu items with orders count
+interface MenuItemWithOrders {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  category: string;
+  image: string;
+  status: 'active' | 'inactive';
+  popular: boolean;
+  orders: number;
+}
+
+// Extended order interface with customer details
+interface RestaurantOrder extends ApiOrder {
+  customerName?: string;
+  customerAddress?: string;
+  customerPhone?: string;
+}
 
 const mockOrders: Order[] = [
   {
@@ -159,33 +134,173 @@ const mockOrders: Order[] = [
 ];
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'preparing':
-      return 'bg-warning text-warning-foreground';
-    case 'ready':
-      return 'bg-success text-success-foreground';
-    case 'delivered':
-      return 'bg-muted text-muted-foreground';
+  switch (status.toUpperCase()) {
+    case 'PENDING':
+      return 'bg-orange-100 text-orange-800 border-orange-200';
+    case 'PREPARING':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'READY':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'DELIVERED':
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+    case 'CANCELLED':
+      return 'bg-red-100 text-red-800 border-red-200';
     default:
-      return 'bg-muted text-muted-foreground';
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
 
 const RestaurantDashboard = () => {
   const { user } = useAuth();
-  const [menuItems, setMenuItems] = useState(initialMenuItems);
-  const [orders, setOrders] = useState(mockOrders);
+  const [menuItems, setMenuItems] = useState<MenuItemWithOrders[]>([]);
+  const [orders, setOrders] = useState<RestaurantOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const { toast } = useToast();
 
-  const handleAddItem = (newItem: Omit<typeof initialMenuItems[0], 'id' | 'orders'>) => {
-    const item = {
-      ...newItem,
-      id: Date.now().toString(),
-      orders: 0,
+  // Fetch menu items from API
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        console.log('RestaurantDashboard - Starting to fetch menu items');
+        console.log('RestaurantDashboard - User from context:', user);
+        console.log('RestaurantDashboard - localStorage accessToken:', localStorage.getItem('accessToken'));
+        console.log('RestaurantDashboard - localStorage user:', localStorage.getItem('user'));
+        
+        if (!user) return;
+        const foods: Food[] = await foodApi.getFoodsByRestaurant(user.id);
+        console.log('RestaurantDashboard - Foods received from API:', foods);
+        
+        // Convert API data to local format and add orders count
+        const itemsWithOrders: MenuItemWithOrders[] = foods.map(food => ({
+          id: food.id.toString(),
+          name: food.name,
+          description: food.description,
+          price: food.price,
+          quantity: food.quantity,
+          category: food.category,
+          image: food.imageUrl,
+          status: food.status === 'available' ? 'active' : 'inactive',
+          popular: food.popular,
+          orders: Math.floor(Math.random() * 100), // Mock orders count for now
+        }));
+        
+        console.log('RestaurantDashboard - Converted items:', itemsWithOrders);
+        setMenuItems(itemsWithOrders);
+      } catch (error) {
+        console.error('RestaurantDashboard - Failed to fetch menu items:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load menu items",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setMenuItems(prev => [...prev, item]);
+
+    if (user) {
+      fetchMenuItems();
+      fetchRestaurantOrders();
+    }
+  }, [user, toast]);
+
+  // Fetch restaurant orders
+  const fetchRestaurantOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const allOrders = await orderApi.getAllOrders();
+      const allFoods = await foodApi.getAllFoods();
+      
+      // Filter orders that have at least one item from current restaurant
+      const restaurantOrders: RestaurantOrder[] = [];
+      
+      for (const order of allOrders) {
+        const hasRestaurantItem = order.orderItems.some(orderItem => {
+          const food = allFoods.find(f => f.id === orderItem.foodId);
+          return food && food.restaurantId === user?.id;
+        });
+        
+        if (hasRestaurantItem) {
+          try {
+            // Get customer details
+            const customer = await userApi.getUserById(order.customerId);
+            restaurantOrders.push({
+              ...order,
+              customerName: `${customer.firstName} ${customer.lastName}`,
+              customerAddress: customer.address,
+              customerPhone: customer.phoneNumber,
+            });
+          } catch (customerError) {
+            console.warn(`Failed to fetch customer ${order.customerId}:`, customerError);
+            // Add order without customer details
+            restaurantOrders.push({
+              ...order,
+              customerName: `Customer #${order.customerId}`,
+              customerAddress: 'Unknown',
+              customerPhone: 'Unknown',
+            });
+          }
+        }
+      }
+      
+      setOrders(restaurantOrders);
+    } catch (error) {
+      console.error('Failed to fetch restaurant orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load orders",
+        variant: "destructive",
+      });
+    } finally {
+      setOrdersLoading(false);
+    }
   };
 
-  const handleUpdateItem = (id: string, updates: Partial<typeof initialMenuItems[0]>) => {
+  const handleAddItem = async (newItem: Omit<MenuItemWithOrders, 'id' | 'orders'>) => {
+    try {
+      const created = await foodApi.createFood({
+        name: newItem.name,
+        description: newItem.description,
+        price: newItem.price,
+        quantity: newItem.quantity,
+        category: newItem.category,
+        imageUrl: newItem.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400',
+        status: newItem.status === 'active' ? 'available' : 'unavailable',
+        popular: newItem.popular,
+      });
+
+      // Add the new item to local state with the API response data
+      const item: MenuItemWithOrders = {
+        id: created.id.toString(),
+        name: created.name,
+        description: created.description,
+        price: created.price,
+        quantity: created.quantity,
+        category: created.category,
+        image: created.imageUrl,
+        status: created.status === 'available' ? 'active' : 'inactive',
+        popular: created.popular,
+        orders: 0,
+      };
+      
+      setMenuItems(prev => [...prev, item]);
+      
+      toast({
+        title: "Success",
+        description: `${newItem.name} has been added to your menu successfully`,
+      });
+    } catch (error) {
+      console.error('Failed to add food item:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to add food item',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateItem = (id: string, updates: Partial<MenuItemWithOrders>) => {
     setMenuItems(prev => prev.map(item => 
       item.id === id ? { ...item, ...updates } : item
     ));
@@ -195,14 +310,14 @@ const RestaurantDashboard = () => {
     setMenuItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleUpdateOrderStatus = (orderId: string, status: Order['status']) => {
+  const handleUpdateOrderStatus = (orderId: string | number, status: string) => {
     setOrders(prev => prev.map(order => 
       order.id === orderId ? { ...order, status } : order
     ));
   };
 
   const activeOrders = orders.filter(order => 
-    ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(order.status)
+    ['PENDING', 'PREPARING', 'READY'].includes(order.status)
   );
 
   return (
@@ -278,21 +393,28 @@ const RestaurantDashboard = () => {
                       <div key={order.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">{order.id}</span>
+                            <span className="font-medium">Order #{order.id}</span>
                             <Badge className={getStatusColor(order.status)}>
                               {order.status.replace('_', ' ')}
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground mb-1">
-                            {order.customer}
+                            {order.customerName}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
+                            {order.orderItems.length} item(s)
                           </p>
+                          {order.note && (
+                            <p className="text-xs text-muted-foreground italic">
+                              Note: {order.note}
+                            </p>
+                          )}
                         </div>
                         <div className="text-right ml-4">
-                          <p className="font-semibold">${order.total.toFixed(2)}</p>
-                          <p className="text-sm text-muted-foreground">{order.orderTime}</p>
+                          <p className="font-semibold">${order.cost.toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(order.createdAt).toLocaleString()}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -344,11 +466,17 @@ const RestaurantDashboard = () => {
               <h2 className="text-2xl font-bold">Menu Management</h2>
               <AddItemModal onAddItem={handleAddItem} />
             </div>
-            <MenuManagement 
-              items={menuItems}
-              onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem}
-            />
+            {isLoading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading menu items...</p>
+              </div>
+            ) : (
+              <MenuManagement 
+                items={menuItems}
+                onUpdateItem={handleUpdateItem}
+                onDeleteItem={handleDeleteItem}
+              />
+            )}
           </TabsContent>
 
           {/* Orders Management Tab */}
@@ -358,7 +486,7 @@ const RestaurantDashboard = () => {
               <Badge variant="secondary">{orders.length} total orders</Badge>
             </div>
             <OrderManagement 
-              orders={orders}
+              orders={orders as any}
               onUpdateOrderStatus={handleUpdateOrderStatus}
             />
           </TabsContent>

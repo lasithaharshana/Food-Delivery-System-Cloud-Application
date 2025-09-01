@@ -23,6 +23,11 @@ export const getStoredUser = (): any => {
   return userStr ? JSON.parse(userStr) : null;
 };
 
+export const getStoredUserId = (): number | null => {
+  const user = getStoredUser();
+  return user?.id || null;
+};
+
 export const setStoredUser = (user: any): void => {
   localStorage.setItem('user', JSON.stringify(user));
 };
