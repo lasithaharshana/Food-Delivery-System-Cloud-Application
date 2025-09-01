@@ -94,19 +94,19 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-restaurant
+  name: mysql-food
   namespace: food-delivery
   labels:
-    app: mysql-restaurant
+    app: mysql-food
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql-restaurant
+      app: mysql-food
   template:
     metadata:
       labels:
-        app: mysql-restaurant
+        app: mysql-food
     spec:
       containers:
       - name: mysql
@@ -120,25 +120,25 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-restaurant-secret
+              name: mysql-food-secret
               key: MYSQL_ROOT_PASSWORD
         - name: MYSQL_DATABASE
           valueFrom:
             secretKeyRef:
-              name: mysql-restaurant-secret
+              name: mysql-food-secret
               key: MYSQL_DATABASE
         - name: MYSQL_USER
           valueFrom:
             secretKeyRef:
-              name: mysql-restaurant-secret
+              name: mysql-food-secret
               key: MYSQL_USER
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-restaurant-secret
+              name: mysql-food-secret
               key: MYSQL_PASSWORD
         volumeMounts:
-        - name: mysql-restaurant-storage
+        - name: mysql-food-storage
           mountPath: /var/lib/mysql
         livenessProbe:
           exec:
@@ -166,21 +166,21 @@ spec:
             memory: "1Gi"
             cpu: "500m"
       volumes:
-      - name: mysql-restaurant-storage
+      - name: mysql-food-storage
         persistentVolumeClaim:
-          claimName: mysql-restaurant-pvc
+          claimName: mysql-food-pvc
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-restaurant
+  name: mysql-food
   namespace: food-delivery
   labels:
-    app: mysql-restaurant
+    app: mysql-food
 spec:
   selector:
-    app: mysql-restaurant
+    app: mysql-food
   ports:
   - port: 3306
     targetPort: 3306

@@ -111,7 +111,7 @@ jobs:
             version: ${{ steps.get_tag.outputs.tag }}
         data:
           authservice: "${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-authservice:${{ steps.get_tag.outputs.tag }}"
-          restaurantservice: "${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-restaurantservice:${{ steps.get_tag.outputs.tag }}"
+          foodservice: "${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-foodservice:${{ steps.get_tag.outputs.tag }}"
           orderservice: "${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-orderservice:${{ steps.get_tag.outputs.tag }}"
           apigateway: "${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-apigateway:${{ steps.get_tag.outputs.tag }}"
           frontend: "${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/food-delivery-frontend:${{ steps.get_tag.outputs.tag }}"
