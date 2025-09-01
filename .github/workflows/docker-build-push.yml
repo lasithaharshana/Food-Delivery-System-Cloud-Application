@@ -70,14 +70,18 @@ jobs:
       id: tagger
       run: |
         set -eux
-        BASE_VERSION=$(git tag --sort=-v:refname | head -n 1 || echo "dev")
+        BASE_VERSION=$(git tag --sort=-v:refname | head -n 1 2>/dev/null || echo "")
         DATE=$(date -u +"%Y%m%d")
         TIME=$(date -u +"%H%M%S")
         DATETIME="${DATE}-${TIME}"
         SHORT_SHA=${GITHUB_SHA::7}
 
         # Build combined version tag: base version + date
-        if [ "$BASE_VERSION" = "dev" ]; then
+        if [ -z "$BASE_VERSION" ] || [ "$BASE_VERSION" = "dev" ]; then
+          BASE_VERSION="dev"
+          FULL_VERSION="dev-${DATETIME}"
+        elif [[ "$BASE_VERSION" =~ ^-.*$ ]]; then
+          BASE_VERSION="dev"
           FULL_VERSION="dev-${DATETIME}"
         else
           FULL_VERSION="${BASE_VERSION}-${DATETIME}"
