@@ -39,3 +39,8 @@ data:
   AUTH_SERVICE_URL: "http://authservice:8081"
   ORDER_SERVICE_URL: "http://orderservice:9094"
   RESTAURANT_SERVICE_URL: "http://restaurantservice:9093"
+  # CORS Configuration
+  CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://frontend:80,http://food-delivery.local,http://api.food-delivery.local"
+  CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
+  CORS_ALLOWED_HEADERS: "*"
+  CORS_ALLOW_CREDENTIALS: "true"

@@ -26,16 +26,16 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     
-    @Value("${cors.allowed.origins:http://localhost:3000,http://localhost:5173}")
+    @Value("${cors.allowed.origins:${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8080}}")
     private String allowedOrigins;
     
-    @Value("${cors.allowed.methods:GET,POST,PUT,DELETE,PATCH,OPTIONS}")
+    @Value("${cors.allowed.methods:${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,PATCH,OPTIONS}}")
     private String allowedMethods;
     
-    @Value("${cors.allowed.headers:*}")
+    @Value("${cors.allowed.headers:${CORS_ALLOWED_HEADERS:*}}")
     private String allowedHeaders;
     
-    @Value("${cors.allow.credentials:true}")
+    @Value("${cors.allow.credentials:${CORS_ALLOW_CREDENTIALS:true}}")
     private boolean allowCredentials;
     
     @Bean
