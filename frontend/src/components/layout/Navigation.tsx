@@ -106,7 +106,11 @@ const Navigation = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={logout}
+              onClick={() => {
+                localStorage.clear();
+                logout();
+                window.location.href = window.location.origin + '/';
+              }}
               className="flex items-center space-x-2"
             >
               <LogOut className="w-4 h-4" />

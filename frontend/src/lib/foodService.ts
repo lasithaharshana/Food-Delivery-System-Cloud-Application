@@ -1,4 +1,4 @@
-import { API_FOODS } from './api-endpoints';
+import { API_BASE_URL, API_FOODS } from './api-endpoints';
 import { getStoredToken, getStoredUser } from './utils';
 
 export interface AddFoodRequest {
@@ -204,5 +204,40 @@ export const getFoodsByRestaurant = async (): Promise<FoodItem[]> => {
   } catch (error) {
     console.error('getFoodsByRestaurant - Fetch error:', error);
     throw error;
+  }
+};
+
+export const updateFood = async (id: number, foodData: AddFoodRequest): Promise<AddFoodResponse> => {
+  const token = getStoredToken();
+  if (!token) throw new Error('No authentication token found');
+  const url = `${API_BASE_URL}/api/foods/${id}`;
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(foodData),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText);
+  }
+  return await response.json();
+};
+
+export const deleteFood = async (id: number): Promise<void> => {
+  const token = getStoredToken();
+  if (!token) throw new Error('No authentication token found');
+  const url = `${API_BASE_URL}/api/foods/${id}`;
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText);
   }
 };

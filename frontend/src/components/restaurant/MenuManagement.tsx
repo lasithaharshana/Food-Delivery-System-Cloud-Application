@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { updateFood, deleteFood } from '@/lib/foodService';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Eye, 
   Edit, 
@@ -41,6 +43,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const categories = ['All', ...Array.from(new Set(items.map(item => item.category)))];
   
@@ -53,32 +56,84 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const handleStatusToggle = (id: string, currentStatus: 'active' | 'inactive') => {
+  // Update status API
+  const handleStatusToggle = async (id: string, currentStatus: 'active' | 'inactive') => {
+    const item = items.find(i => i.id === id);
+    if (!item || !user) return;
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    onUpdateItem(id, { status: newStatus });
-    
-    toast({
-      title: "Status updated",
-      description: `Item status changed to ${newStatus}.`,
-    });
-  };
-
-  const handlePopularToggle = (id: string, currentPopular: boolean) => {
-    onUpdateItem(id, { popular: !currentPopular });
-    
-    toast({
-      title: "Popular status updated",
-      description: `Item ${!currentPopular ? 'marked as' : 'removed from'} popular.`,
-    });
-  };
-
-  const handleDelete = (id: string, itemName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${itemName}"?`)) {
-      onDeleteItem(id);
-      toast({
-        title: "Item deleted",
-        description: `${itemName} has been removed from your menu.`,
+    try {
+      await updateFood(Number(id), {
+        restaurantId: user.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        quantity: item.quantity,
+        category: item.category,
+        imageUrl: item.image,
+        status: newStatus === 'active' ? 'available' : 'unavailable',
+        popular: item.popular,
       });
+      onUpdateItem(id, { status: newStatus });
+      toast({
+        title: "Status updated",
+        description: `Item status changed to ${newStatus}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Update popular API
+  const handlePopularToggle = async (id: string, currentPopular: boolean) => {
+    const item = items.find(i => i.id === id);
+    if (!item || !user) return;
+    try {
+      await updateFood(Number(id), {
+        restaurantId: user.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        quantity: item.quantity,
+        category: item.category,
+        imageUrl: item.image,
+        status: item.status === 'active' ? 'available' : 'unavailable',
+        popular: !currentPopular,
+      });
+      onUpdateItem(id, { popular: !currentPopular });
+      toast({
+        title: "Popular status updated",
+        description: `Item ${!currentPopular ? 'marked as' : 'removed from'} popular.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update popular status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Delete API
+  const handleDelete = async (id: string, itemName: string) => {
+    if (window.confirm(`Are you sure you want to delete "${itemName}"?`)) {
+      try {
+        await deleteFood(Number(id));
+        onDeleteItem(id);
+        toast({
+          title: "Item deleted",
+          description: `${itemName} has been removed from your menu.`,
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to delete item",
+          variant: "destructive",
+        });
+      }
     }
   };
 
