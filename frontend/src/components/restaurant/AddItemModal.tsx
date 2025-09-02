@@ -23,32 +23,64 @@ interface MenuItem {
 
 interface AddItemModalProps {
   onAddItem: (item: Omit<MenuItem, 'id'>) => void;
+  initialValues?: Partial<MenuItem>;
+  isEdit?: boolean;
+  open?: boolean;
+  onClose?: () => void;
 }
 
-const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
+const AddItemModal: React.FC<AddItemModalProps> = ({
+  onAddItem,
+  initialValues,
+  isEdit = false,
+  open: controlledOpen,
+  onClose,
+}) => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    price: string;
+    quantity: string;
+    category: string;
+    image: string;
+    status: 'active' | 'inactive';
+    popular: boolean;
+  }>({
     name: '',
     description: '',
     price: '',
     quantity: '20',
     category: '',
     image: '',
-    status: 'active' as const,
+    status: 'active',
     popular: false
   });
-  const notifications = useNotifications();
 
+  React.useEffect(() => {
+    if (initialValues) {
+      setFormData({
+        name: initialValues.name || '',
+        description: initialValues.description || '',
+        price: initialValues.price?.toString() || '',
+        quantity: initialValues.quantity?.toString() || '20',
+        category: initialValues.category || '',
+        image: initialValues.image || '',
+        status: initialValues.status || 'active',
+        popular: initialValues.popular || false
+      });
+    }
+  }, [initialValues]);
+
+  const notifications = useNotifications();
   const categories = ['Pizza', 'Burger', 'Salad', 'Appetizer', 'Side', 'Dessert', 'Beverage'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.name || !formData.description || !formData.price || !formData.category) {
       notifications.error("Please fill in all required fields.");
       return;
     }
-
     const newItem: Omit<MenuItem, 'id'> = {
       name: formData.name,
       description: formData.description,
@@ -59,22 +91,21 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
       status: formData.status,
       popular: formData.popular
     };
-
     onAddItem(newItem);
-
-    // Reset form
-    setFormData({
-      name: '',
-      description: '',
-      price: '',
-      quantity: '20',
-      category: '',
-      image: '',
-      status: 'active',
-      popular: false
-    });
-    
-    setOpen(false);
+    if (!isEdit) {
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        quantity: '20',
+        category: '',
+        image: '',
+        status: 'active',
+        popular: false
+      });
+    }
+    if (onClose) onClose();
+    else setOpen(false);
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -82,18 +113,22 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={controlledOpen ?? open} onOpenChange={controlledOpen ? onClose : setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center space-x-2">
-          <Plus className="w-4 h-4" />
-          <span>Add Item</span>
-        </Button>
+        {!isEdit && (
+          <Button className="flex items-center space-x-2">
+            <Plus className="w-4 h-4" />
+            <span>Add Item</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Menu Item</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit Menu Item' : 'Add New Menu Item'}</DialogTitle>
           <DialogDescription>
-            Fill in the details below to add a new item to your restaurant menu.
+            {isEdit
+              ? 'Update the details below to edit this menu item.'
+              : 'Fill in the details below to add a new item to your restaurant menu.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -207,8 +242,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onAddItem }) => {
           </div>
 
           <div className="flex space-x-2 pt-4">
-            <Button type="submit" className="flex-1">Add Item</Button>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="submit" className="flex-1">{isEdit ? 'Save Changes' : 'Add Item'}</Button>
+            <Button type="button" variant="outline" onClick={onClose ?? (() => setOpen(false))}>
               Cancel
             </Button>
           </div>
