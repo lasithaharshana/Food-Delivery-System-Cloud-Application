@@ -129,6 +129,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
         onDeleteItem(id);
         toast({
           title: "Item deleted",
+          color: "green",
           description: `${itemName} has been removed from your menu.`,
         });
       } catch (error) {

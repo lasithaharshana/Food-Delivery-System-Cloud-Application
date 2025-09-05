@@ -8,12 +8,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +34,7 @@ public class FoodController {
     private final FoodRepository repo;
     private final AuthClient userClient;
     private static final Logger logger = LoggerFactory.getLogger(FoodController.class);
+
 
     public FoodController(FoodRepository repo, AuthClient userClient) {
         this.repo = repo;
@@ -47,6 +55,7 @@ public class FoodController {
         return ResponseEntity.ok(repo.findAll());
     }
 
+   
     @GetMapping("/{id}")
     @Operation(summary = "Get Food by ID", description = "Retrieve a specific Food by its ID")
     @ApiResponses(value = {
@@ -177,6 +186,29 @@ public class FoodController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("Arg error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private static final String UPLOAD_DIR = "/uploads";
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            File dir = new File(UPLOAD_DIR);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path path = Paths.get(UPLOAD_DIR, fileName);
+            Files.write(path, file.getBytes());
+
+            // Return path to store in DB
+            String filePath = "/uploads/" + fileName;
+            return ResponseEntity.ok(Map.of("path", filePath));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "File upload failed"));
         }
     }
 

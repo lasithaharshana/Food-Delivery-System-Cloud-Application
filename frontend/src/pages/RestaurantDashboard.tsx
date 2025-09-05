@@ -73,65 +73,65 @@ interface RestaurantOrder extends ApiOrder {
   customerPhone?: string;
 }
 
-const mockOrders: Order[] = [
-  {
-    id: 'ORD-001',
-    customer: 'John Doe',
-    customerPhone: '+1 (555) 123-4567',
-    items: [
-      { name: 'Margherita Pizza', quantity: 1, price: 18.99 },
-      { name: 'Caesar Salad', quantity: 1, price: 12.99 }
-    ],
-    total: 31.98,
-    status: 'preparing',
-    orderTime: '2:15 PM',
-    estimatedTime: '2:35 PM',
-    paymentMethod: 'card',
-    deliveryAddress: '123 Main St, Apt 4B',
-    notes: 'Extra cheese on pizza please'
-  },
-  {
-    id: 'ORD-002',
-    customer: 'Jane Smith',
-    customerPhone: '+1 (555) 987-6543',
-    items: [
-      { name: 'Pepperoni Pizza', quantity: 2, price: 21.99 },
-      { name: 'Garlic Bread', quantity: 1, price: 6.99 }
-    ],
-    total: 50.97,
-    status: 'ready',
-    orderTime: '2:05 PM',
-    estimatedTime: '2:25 PM',
-    paymentMethod: 'cash',
-    deliveryAddress: '456 Oak Ave, Unit 2'
-  },
-  {
-    id: 'ORD-003',
-    customer: 'Mike Johnson',
-    items: [
-      { name: 'Caesar Salad', quantity: 2, price: 12.99 }
-    ],
-    total: 25.98,
-    status: 'delivered',
-    orderTime: '1:45 PM',
-    paymentMethod: 'online',
-    deliveryAddress: '789 Pine Rd'
-  },
-  {
-    id: 'ORD-004',
-    customer: 'Sarah Wilson',
-    customerPhone: '+1 (555) 456-7890',
-    items: [
-      { name: 'Margherita Pizza', quantity: 1, price: 18.99 }
-    ],
-    total: 18.99,
-    status: 'pending',
-    orderTime: '2:20 PM',
-    paymentMethod: 'card',
-    deliveryAddress: '321 Elm St',
-    notes: 'Ring doorbell twice'
-  }
-];
+// const mockOrders: Order[] = [
+//   {
+//     id: 'ORD-001',
+//     customer: 'John Doe',
+//     customerPhone: '+1 (555) 123-4567',
+//     items: [
+//       { name: 'Margherita Pizza', quantity: 1, price: 18.99 },
+//       { name: 'Caesar Salad', quantity: 1, price: 12.99 }
+//     ],
+//     total: 31.98,
+//     status: 'preparing',
+//     orderTime: '2:15 PM',
+//     estimatedTime: '2:35 PM',
+//     paymentMethod: 'card',
+//     deliveryAddress: '123 Main St, Apt 4B',
+//     notes: 'Extra cheese on pizza please'
+//   },
+//   {
+//     id: 'ORD-002',
+//     customer: 'Jane Smith',
+//     customerPhone: '+1 (555) 987-6543',
+//     items: [
+//       { name: 'Pepperoni Pizza', quantity: 2, price: 21.99 },
+//       { name: 'Garlic Bread', quantity: 1, price: 6.99 }
+//     ],
+//     total: 50.97,
+//     status: 'ready',
+//     orderTime: '2:05 PM',
+//     estimatedTime: '2:25 PM',
+//     paymentMethod: 'cash',
+//     deliveryAddress: '456 Oak Ave, Unit 2'
+//   },
+//   {
+//     id: 'ORD-003',
+//     customer: 'Mike Johnson',
+//     items: [
+//       { name: 'Caesar Salad', quantity: 2, price: 12.99 }
+//     ],
+//     total: 25.98,
+//     status: 'delivered',
+//     orderTime: '1:45 PM',
+//     paymentMethod: 'online',
+//     deliveryAddress: '789 Pine Rd'
+//   },
+//   {
+//     id: 'ORD-004',
+//     customer: 'Sarah Wilson',
+//     customerPhone: '+1 (555) 456-7890',
+//     items: [
+//       { name: 'Margherita Pizza', quantity: 1, price: 18.99 }
+//     ],
+//     total: 18.99,
+//     status: 'pending',
+//     orderTime: '2:20 PM',
+//     paymentMethod: 'card',
+//     deliveryAddress: '321 Elm St',
+//     notes: 'Ring doorbell twice'
+//   }
+// ];
 
 const getStatusColor = (status: string) => {
   switch (status.toUpperCase()) {
@@ -288,6 +288,7 @@ const RestaurantDashboard = () => {
       
       toast({
         title: "Success",
+        color: "green",
         description: `${newItem.name} has been added to your menu successfully`,
       });
     } catch (error) {

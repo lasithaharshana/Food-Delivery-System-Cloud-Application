@@ -200,7 +200,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             </Select>
           </div>
 
-          <div>
+          {/* <div>
             <Label htmlFor="image">Image URL</Label>
             <div className="flex space-x-2">
               <Input
@@ -213,7 +213,50 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                 <Upload className="w-4 h-4" />
               </Button>
             </div>
+          </div>  */}
+
+          <div>
+            <Label htmlFor="imageFile">Upload Image</Label>
+            <div className="flex space-x-2 items-center">
+              <Input
+                id="imageFile"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  if (e.target.files?.[0]) {
+                    const formData = new FormData();
+                    formData.append("file", e.target.files[0]);
+
+                    try {
+                      const res = await fetch('http://localhost:8080/api/files/upload', {
+                        method: "POST",
+                        body: formData,
+                      });
+                      const data = await res.json();
+
+                      if (data.path) {
+                        // Save backend path to state
+                        handleInputChange("image", data.path);
+                      }
+                    } catch (err) {
+                      console.error("Upload failed:", err);
+                    }
+                  }
+                }}
+              />
+
+              {formData.image && (
+                <img
+                  src={`http://localhost:8080/api/files/upload${formData.image}`}
+                  alt="preview"
+                  className="w-16 h-16 object-cover rounded"
+                />
+              )}
+            </div>
           </div>
+
+
+
 
           <div className="grid grid-cols-2 gap-4">
             <div>
