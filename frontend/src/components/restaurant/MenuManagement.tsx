@@ -8,11 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { updateFood, deleteFood } from '@/lib/foodService';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Search, 
+import {
+  Eye,
+  Edit,
+  Trash2,
+  Search,
   Filter,
   Star,
   MoreVertical,
@@ -28,7 +28,7 @@ interface MenuItem {
   price: number;
   quantity: number;
   category: string;
-  image: string;
+  imageUrl: string;
   status: 'active' | 'inactive';
   popular: boolean;
   orders?: number;
@@ -50,13 +50,13 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
   const { user } = useAuth();
 
   const categories = ['All', ...Array.from(new Set(items.map(item => item.category)))];
-  
+
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.description.toLowerCase().includes(searchTerm.toLowerCase());
+      item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
     const matchesStatus = filterStatus === 'All' || item.status === filterStatus;
-    
+
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -73,7 +73,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
         price: item.price,
         quantity: item.quantity,
         category: item.category,
-        imageUrl: item.image,
+        imageUrl: item.imageUrl,
         status: newStatus === 'active' ? 'available' : 'unavailable',
         popular: item.popular,
       });
@@ -103,7 +103,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
         price: item.price,
         quantity: item.quantity,
         category: item.category,
-        imageUrl: item.image,
+        imageUrl: item.imageUrl,
         status: item.status === 'active' ? 'available' : 'unavailable',
         popular: !currentPopular,
       });
@@ -158,7 +158,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
         price: updated.price,
         quantity: updated.quantity,
         category: updated.category,
-        imageUrl: updated.image,
+        imageUrl: updated.imageUrl,
         status: updated.status === 'active' ? 'available' : 'unavailable',
         popular: updated.popular,
       });
@@ -183,7 +183,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle>Menu Management</CardTitle>
-          
+
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div className="flex-1 relative">
@@ -195,7 +195,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
                 className="pl-10"
               />
             </div>
-            
+
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Category" />
@@ -208,7 +208,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
                 ))}
               </SelectContent>
             </Select>
-            
+
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-full sm:w-32">
                 <SelectValue placeholder="Status" />
@@ -221,7 +221,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
             </Select>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           {filteredItems.length === 0 ? (
             <div className="text-center py-8">
@@ -230,12 +230,15 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
           ) : (
             <div className="space-y-4">
               {filteredItems.map((item) => (
-                <div key={item.id} className="flex items-center space-x-4 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                <div
+                  key={item.id}
+                  className="flex items-center space-x-4 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                >
                   {/* Item Image */}
                   <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                    {item.image ? (
+                    {item.imageUrl ? (
                       <img
-                        src={item.image}
+                        src={`http://localhost:8080/api/foods/uploads/${item.imageUrl}`}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
@@ -259,7 +262,10 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
                       <Badge variant="secondary" className="text-xs">
                         {item.category}
                       </Badge>
-                      <Badge variant={item.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                      <Badge
+                        variant={item.status === "active" ? "default" : "secondary"}
+                        className="text-xs"
+                      >
                         {item.status}
                       </Badge>
                       {item.orders !== undefined && (
@@ -275,7 +281,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
                     <p className="text-lg font-semibold text-primary mb-2">
                       ${item.price.toFixed(2)}
                     </p>
-                    
+
                     <div className="flex items-center space-x-1">
                       <Button
                         size="sm"
@@ -283,18 +289,29 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
                         onClick={() => handlePopularToggle(item.id, item.popular)}
                         title={item.popular ? "Remove from popular" : "Mark as popular"}
                       >
-                        <Star className={`w-4 h-4 ${item.popular ? 'text-yellow-400 fill-current' : 'text-muted-foreground'}`} />
+                        <Star
+                          className={`w-4 h-4 ${item.popular
+                              ? "text-yellow-400 fill-current"
+                              : "text-muted-foreground"
+                            }`}
+                        />
                       </Button>
-                      
+
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleStatusToggle(item.id, item.status)}
-                        title={`${item.status === 'active' ? 'Deactivate' : 'Activate'} item`}
+                        title={`${item.status === "active" ? "Deactivate" : "Activate"
+                          } item`}
                       >
-                        <Eye className={`w-4 h-4 ${item.status === 'active' ? 'text-success' : 'text-muted-foreground'}`} />
+                        <Eye
+                          className={`w-4 h-4 ${item.status === "active"
+                              ? "text-success"
+                              : "text-muted-foreground"
+                            }`}
+                        />
                       </Button>
-                      
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -303,7 +320,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -319,6 +336,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ items, onUpdateItem, on
             </div>
           )}
         </CardContent>
+
       </Card>
 
       {/* Edit Modal */}
