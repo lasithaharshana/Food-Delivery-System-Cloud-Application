@@ -49,6 +49,11 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/api/health", "/api/info").permitAll()
                 
+                // File upload/access endpoints - no authentication required
+                .requestMatchers("/api/foods/upload").permitAll()
+                .requestMatchers("/api/foods/uploads/**").permitAll()
+                
+                // Protected endpoints
                 .requestMatchers("/api/order/**").authenticated()
                 .requestMatchers("/api/foods/**").authenticated()
                 .requestMatchers("/api/user/**").authenticated()
