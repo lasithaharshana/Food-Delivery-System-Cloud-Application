@@ -6,8 +6,12 @@
 echo " Starting Food Delivery System Kubernetes Cleanup..."
 
 # Delete services first
+echo " Deleting ingress..."
+kubectl delete -f ingress.yaml --ignore-not-found=true
+
 echo " Deleting services..."
 kubectl delete -f frontend.yaml --ignore-not-found=true
+kubectl delete -f file-server.yaml --ignore-not-found=true
 kubectl delete -f apigateway.yaml --ignore-not-found=true
 kubectl delete -f orderservice.yaml --ignore-not-found=true
 kubectl delete -f foodservice.yaml --ignore-not-found=true

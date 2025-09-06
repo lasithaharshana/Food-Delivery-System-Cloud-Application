@@ -36,11 +36,11 @@ spec:
             configMapKeyRef:
               name: app-config
               key: ORDER_SERVICE_URL
-        - name: restaurant_SERVICE_URL
+        - name: FOOD_SERVICE_URL
           valueFrom:
             configMapKeyRef:
               name: app-config
-              key: RESTAURANT_SERVICE_URL
+              key: FOOD_SERVICE_URL
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
@@ -71,6 +71,22 @@ spec:
             configMapKeyRef:
               name: app-config
               key: CORS_ALLOW_CREDENTIALS
+        # Multipart configuration for file uploads
+        - name: SPRING_SERVLET_MULTIPART_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SPRING_SERVLET_MULTIPART_ENABLED
+        - name: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+        - name: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
         livenessProbe:
           httpGet:
             path: /actuator/health

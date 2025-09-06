@@ -10,6 +10,11 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /
+    # File upload configuration
+    nginx.ingress.kubernetes.io/proxy-body-size: "5m"
+    nginx.ingress.kubernetes.io/client-max-body-size: "5m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 spec:
   rules:
   - host: food-delivery.local
@@ -22,6 +27,13 @@ spec:
             name: apigateway
             port:
               number: 8080
+      - path: /uploads
+        pathType: Prefix
+        backend:
+          service:
+            name: file-server
+            port:
+              number: 80
       - path: /
         pathType: Prefix
         backend:
@@ -52,6 +64,11 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
+    # File upload configuration
+    nginx.ingress.kubernetes.io/proxy-body-size: "5m"
+    nginx.ingress.kubernetes.io/client-max-body-size: "5m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 spec:
   rules:
   - host: localhost
@@ -64,6 +81,13 @@ spec:
             name: apigateway
             port:
               number: 8080
+      - path: /uploads
+        pathType: Prefix
+        backend:
+          service:
+            name: file-server
+            port:
+              number: 80
       - path: /
         pathType: Prefix
         backend:
