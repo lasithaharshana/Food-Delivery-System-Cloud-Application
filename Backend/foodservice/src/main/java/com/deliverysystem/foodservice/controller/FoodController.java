@@ -5,6 +5,7 @@ import com.deliverysystem.foodservice.repository.FoodRepository;
 import com.deliverysystem.foodservice.client.AuthClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -266,6 +267,39 @@ public class FoodController {
             logger.error("Unexpected error during file upload: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Unexpected error occurred"));
+        }
+    }
+
+    @GetMapping("/uploads/{filename:.+}")
+    @Operation(summary = "Serve uploaded file", description = "Serve an uploaded image file")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File served successfully"),
+            @ApiResponse(responseCode = "404", description = "File not found")
+    })
+    public ResponseEntity<org.springframework.core.io.Resource> serveFile(
+            @Parameter(description = "Filename to serve") @PathVariable String filename) {
+        try {
+            Path filePath = Paths.get(UPLOAD_DIR, filename);
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(filePath.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                // Determine content type
+                String contentType = Files.probeContentType(filePath);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+                
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_TYPE, contentType)
+                        .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000") // 1 year cache
+                        .header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            logger.error("Error serving file {}: {}", filename, e.getMessage());
+            return ResponseEntity.notFound().build();
         }
     }
 

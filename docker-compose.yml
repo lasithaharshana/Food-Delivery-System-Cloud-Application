@@ -90,7 +90,7 @@ services:
     ports:
       - "9093:9093"
     volumes:
-    - ./uploads:/uploads
+      - ./uploads:/uploads
     depends_on:
       mysql-food:
         condition: service_healthy
@@ -100,6 +100,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-food:3306/fooddb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
+      # File upload configuration
+      SPRING_SERVLET_MULTIPART_ENABLED: "true"
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "5MB"
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: "5MB"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9093/actuator/health"]
       interval: 30s
@@ -152,6 +156,10 @@ services:
       AUTH_SERVICE_URL: http://authservice:8081
       ORDER_SERVICE_URL: http://orderservice:9094
       FOOD_SERVICE_URL: http://foodservice:9093
+      # File upload configuration
+      SPRING_SERVLET_MULTIPART_ENABLED: "true"
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "5MB"
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: "5MB"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health", "||", "exit", "1"]
       interval: 30s
@@ -172,6 +180,36 @@ services:
     restart: unless-stopped
     environment:
       - VITE_API_URL=http://localhost:8080
+
+  # File server for serving uploaded images
+  file-server:
+    image: nginx:alpine
+    container_name: file-server
+    ports:
+      - "8090:80"
+    volumes:
+      - ./uploads:/usr/share/nginx/html/uploads:ro
+    restart: unless-stopped
+    command: >
+      sh -c "
+      echo 'server {
+        listen 80;
+        server_name localhost;
+        
+        location /uploads/ {
+          root /usr/share/nginx/html;
+          expires 1y;
+          add_header Cache-Control \"public, immutable\";
+          add_header Access-Control-Allow-Origin \"*\";
+          try_files \$$uri =404;
+        }
+        
+        location / {
+          return 404;
+        }
+      }' > /etc/nginx/conf.d/default.conf &&
+      nginx -g 'daemon off;'
+      "
 
     # =========================
   # Monitoring stack
