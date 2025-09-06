@@ -142,10 +142,10 @@ public class OrderController {
             }
             String token = authorizationHeader.substring(7);
             ValidateTokenRequest request = new ValidateTokenRequest(token);
-            UserResponse customer = authClient.validateToken(request);
+            UserResponse user = authClient.validateToken(request);
 
-            if (customer == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid customer");
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user");
             }
 
             return repo.findById(id).map(existingOrder -> {
@@ -154,12 +154,6 @@ public class OrderController {
 
                     if (updated == null || updated.getOrderItems().isEmpty()) {
                         return ResponseEntity.badRequest().body("Invalid order data");
-                    }
-
-                    // ✅ Ensure this order really belongs to the same customer
-                    if (!existingOrder.getCustomerId().equals(customer.getId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body("You are not allowed to update this order");
                     }
 
                     Map<String, Integer> newQuantities = updated.getOrderItems().stream()
@@ -190,7 +184,7 @@ public class OrderController {
                     oldSnapshot.setOrderItems(new ArrayList<>(existingOrder.getOrderItems()));
 
                     // ✅ Do not override customerId from request — keep token user’s ID
-                    existingOrder.setCustomerId(customer.getId());
+                    existingOrder.setCustomerId(existingOrder.getCustomerId());
                     existingOrder.setNote(updated.getNote());
                     existingOrder.setStatus(updated.getStatus());
                     existingOrder.setCost(updated.getCost());
