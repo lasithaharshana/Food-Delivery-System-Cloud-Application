@@ -65,6 +65,17 @@ kubectl apply -f frontend.yaml
 echo " Waiting for Frontend to be ready..."
 kubectl wait --for=condition=ready pod -l app=frontend -n food-delivery --timeout=300s
 
+# Deploy monitoring stack
+echo " Deploying Monitoring Configuration..."
+kubectl apply -f monitoring-config.yaml
+
+echo " Deploying Monitoring Stack..."
+kubectl apply -f monitoring.yaml
+
+echo " Waiting for Monitoring components to be ready..."
+kubectl wait --for=condition=ready pod -l app=prometheus -n food-delivery --timeout=300s
+kubectl wait --for=condition=ready pod -l app=grafana -n food-delivery --timeout=300s
+
 echo " Deploying Ingress..."
 kubectl apply -f ingress.yaml
 
@@ -79,8 +90,24 @@ kubectl get pods -n food-delivery
 
 echo ""
 echo " Access URLs:"
+echo " - Frontend: http://food-delivery.local or http://localhost"
+echo " - API Gateway: http://food-delivery.local/api or http://localhost/api"
+echo " - Grafana Monitoring: http://food-delivery.local/grafana or http://localhost/grafana (admin/admin123)"
+echo " - Prometheus: http://food-delivery.local/prometheus or http://localhost/prometheus"
+echo " - File Server: http://food-delivery.local/uploads or http://localhost/uploads"
+
+echo ""
+echo " For LoadBalancer IPs (if available):"
 echo "Frontend: http://$(kubectl get service frontend -n food-delivery -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):80"
 echo "API Gateway: http://$(kubectl get service apigateway -n food-delivery -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):8080"
+echo "Grafana: http://$(kubectl get service grafana -n food-delivery -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):3000"
+
+echo ""
+echo " For port forwarding (if LoadBalancer is pending):"
+echo "kubectl port-forward -n food-delivery service/frontend 3000:80"
+echo "kubectl port-forward -n food-delivery service/apigateway 8080:8080"
+echo "kubectl port-forward -n food-delivery service/grafana 3001:3000"
+echo "kubectl port-forward -n food-delivery service/prometheus 9090:9090"
 
 echo ""
 echo " Food Delivery System is now running on Kubernetes!"

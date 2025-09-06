@@ -1,0 +1,202 @@
+# =========================
+# Prometheus Configuration
+# =========================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: food-delivery
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets: []
+
+    rule_files:
+    - "/etc/prometheus/alerting/*.yml"
+
+    scrape_configs:
+    # =========================
+    # Application Services
+    # =========================
+    - job_name: 'authservice'
+      static_configs:
+      - targets: ['authservice:8081']
+      metrics_path: '/actuator/prometheus'
+      scrape_interval: 15s
+
+    - job_name: 'foodservice'
+      static_configs:
+      - targets: ['foodservice:9093']
+      metrics_path: '/actuator/prometheus'
+      scrape_interval: 15s
+
+    - job_name: 'orderservice'
+      static_configs:
+      - targets: ['orderservice:9094']
+      metrics_path: '/actuator/prometheus'
+      scrape_interval: 15s
+
+    - job_name: 'apigateway'
+      static_configs:
+      - targets: ['apigateway:8080']
+      metrics_path: '/actuator/prometheus'
+      scrape_interval: 15s
+
+    # =========================
+    # Infrastructure Monitoring
+    # =========================
+    - job_name: 'cadvisor'
+      static_configs:
+      - targets: ['cadvisor:8080']
+      scrape_interval: 15s
+
+    - job_name: 'node-exporter'
+      static_configs:
+      - targets: ['node-exporter:9100']
+      scrape_interval: 15s
+
+    - job_name: 'blackbox-exporter'
+      static_configs:
+      - targets: ['blackbox-exporter:9115']
+      scrape_interval: 15s
+
+    # =========================
+    # Database Monitoring
+    # =========================
+    - job_name: 'mysql-auth-exporter'
+      static_configs:
+      - targets: ['mysql-auth-exporter:9104']
+      scrape_interval: 15s
+
+    - job_name: 'mysql-food-exporter'
+      static_configs:
+      - targets: ['mysql-food-exporter:9104']
+      scrape_interval: 15s
+
+    - job_name: 'mysql-order-exporter'
+      static_configs:
+      - targets: ['mysql-order-exporter:9104']
+      scrape_interval: 15s
+
+    # =========================
+    # Health Check Monitoring
+    # =========================
+    - job_name: 'blackbox-http'
+      metrics_path: /probe
+      params:
+        module: [http_2xx]
+      static_configs:
+      - targets:
+        - http://authservice:8081/actuator/health
+        - http://foodservice:9093/actuator/health
+        - http://orderservice:9094/actuator/health
+        - http://apigateway:8080/actuator/health
+        - http://frontend:80
+      relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+---
+# =========================
+# Prometheus Alerting Rules
+# =========================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerting
+  namespace: food-delivery
+data:
+  alerts.yml: |
+    groups:
+    - name: food-delivery-alerts
+      rules:
+      # Service Down Alerts
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.instance }} is down"
+          description: "Service {{ $labels.instance }} has been down for more than 2 minutes."
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% on {{ $labels.instance }}"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% on {{ $labels.instance }}"
+
+      # MySQL Connection Issues
+      - alert: MySQLDown
+        expr: mysql_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL instance {{ $labels.instance }} is down"
+          description: "MySQL database {{ $labels.instance }} has been down for more than 1 minute."
+
+      # High Database Connections
+      - alert: HighDatabaseConnections
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connections on {{ $labels.instance }}"
+          description: "Database connections are above 80% on {{ $labels.instance }}"
+
+---
+# =========================
+# Grafana Provisioning
+# =========================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: food-delivery
+data:
+  datasources.yml: |
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus:9090
+      isDefault: true
+      
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 10
+      options:
+        path: /var/lib/grafana/dashboards

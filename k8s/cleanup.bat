@@ -16,6 +16,11 @@ kubectl delete -f orderservice.yaml --ignore-not-found=true
 kubectl delete -f foodservice.yaml --ignore-not-found=true
 kubectl delete -f authservice.yaml --ignore-not-found=true
 
+REM Delete monitoring stack
+echo  Deleting monitoring stack...
+kubectl delete -f monitoring.yaml --ignore-not-found=true
+kubectl delete -f monitoring-config.yaml --ignore-not-found=true
+
 REM Delete databases
 echo  Deleting MySQL databases...
 kubectl delete -f mysql-deployments.yaml --ignore-not-found=true

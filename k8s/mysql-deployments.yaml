@@ -44,6 +44,9 @@ spec:
         volumeMounts:
         - name: mysql-auth-storage
           mountPath: /var/lib/mysql
+        - name: auth-init-script
+          mountPath: /docker-entrypoint-initdb.d/auth-exporter-user.sql
+          subPath: auth-exporter-user.sql
         livenessProbe:
           exec:
             command:
@@ -73,6 +76,9 @@ spec:
       - name: mysql-auth-storage
         persistentVolumeClaim:
           claimName: mysql-auth-pvc
+      - name: auth-init-script
+        configMap:
+          name: mysql-init-scripts
 
 ---
 apiVersion: v1
@@ -140,6 +146,9 @@ spec:
         volumeMounts:
         - name: mysql-food-storage
           mountPath: /var/lib/mysql
+        - name: food-init-script
+          mountPath: /docker-entrypoint-initdb.d/food-exporter-user.sql
+          subPath: food-exporter-user.sql
         livenessProbe:
           exec:
             command:
@@ -169,6 +178,9 @@ spec:
       - name: mysql-food-storage
         persistentVolumeClaim:
           claimName: mysql-food-pvc
+      - name: food-init-script
+        configMap:
+          name: mysql-init-scripts
 
 ---
 apiVersion: v1
@@ -236,6 +248,9 @@ spec:
         volumeMounts:
         - name: mysql-order-storage
           mountPath: /var/lib/mysql
+        - name: order-init-script
+          mountPath: /docker-entrypoint-initdb.d/order-exporter-user.sql
+          subPath: order-exporter-user.sql
         livenessProbe:
           exec:
             command:
@@ -265,6 +280,9 @@ spec:
       - name: mysql-order-storage
         persistentVolumeClaim:
           claimName: mysql-order-pvc
+      - name: order-init-script
+        configMap:
+          name: mysql-init-scripts
 
 ---
 apiVersion: v1
