@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getStoredToken, getStoredUser } from './utils';
-import {API_FOOD_UPDATE,API_FOOD_LIST,API_ORDER_LIST} from '@/lib/api-endpoints';
+import {API_BASE_URL,API_FOOD_LIST,API_ORDER_LIST} from '@/lib/api-endpoints';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -122,9 +122,25 @@ export interface Order {
 // API functions
 export const restaurantApi = {
   // Get all restaurants
+  // getAllRestaurants: async (): Promise<Restaurant[]> => {
+  //   const url = API_BASE_URL + '/api/users/role/RESTAURANT';
+  //   console.log("Fetching restaurants from:", url);
+    
+  //   // const response = await api.get('/users/role/RESTAURANT');
+  //   return response.data;
+  // },
+
   getAllRestaurants: async (): Promise<Restaurant[]> => {
-    const response = await api.get('/users/role/RESTAURANT');
-    return response.data;
+    const url = API_BASE_URL + '/api/users/role/RESTAURANT';
+    console.log("Fetching restaurants from:", url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getStoredToken()}`,
+      },
+    });
+    return response.json() as Promise<Restaurant[]>;
   },
 };
 
@@ -145,6 +161,7 @@ export const foodApi = {
         'Authorization': `Bearer ${getStoredToken()}`,
       },
     });
+    console.log("Response in getAllFoods", response);
     return response.json() as Promise<Food[]>;
   },
   
@@ -222,12 +239,22 @@ export const orderApi = {
   
   // Get all orders for current user
   getUserOrders: async (): Promise<Order[]> => {
-    const response = await api.get('/order', {
+    // const response = await api.get('/order', {
+    //   headers: {
+    //     Authorization: `Bearer ${getStoredToken()}`,
+    //   },
+    // });
+    const response = await fetch(API_ORDER_LIST, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${getStoredToken()}`,
-      },
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getStoredToken()}`,
+      },  
     });
-    return response.data;
+    return response.json() as Promise<Order[]>;
+    //
+    //
+    // return response.data;
   },
 
   // Get all orders (for restaurant to filter their own)

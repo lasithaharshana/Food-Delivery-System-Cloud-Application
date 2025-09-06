@@ -244,12 +244,12 @@ services:
     container_name: grafana
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123   # change this
+      GF_SECURITY_ADMIN_PASSWORD: admin123   
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - "3001:3000"   # 3000 is used by your frontend, so expose Grafana on 3001
+      - "3001:3000" 
     restart: unless-stopped
     depends_on:
       - prometheus
