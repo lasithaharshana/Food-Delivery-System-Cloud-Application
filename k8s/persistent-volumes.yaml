@@ -14,7 +14,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-restaurant-pvc
+  name: mysql-food-pvc
   namespace: food-delivery
 spec:
   accessModes:
@@ -35,3 +35,16 @@ spec:
   resources:
     requests:
       storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: food-uploads-pvc
+  namespace: food-delivery
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
