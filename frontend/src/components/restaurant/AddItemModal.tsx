@@ -16,7 +16,7 @@ interface MenuItem {
   price: number;
   quantity: number;
   category: string;
-  image: string;
+  imageUrl: string;
   status: 'active' | 'inactive';
   popular: boolean;
 }
@@ -43,7 +43,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     price: string;
     quantity: string;
     category: string;
-    image: string;
+    imageUrl: string;
     status: 'active' | 'inactive';
     popular: boolean;
   }>({
@@ -52,7 +52,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     price: '',
     quantity: '20',
     category: '',
-    image: '',
+    imageUrl: '',
     status: 'active',
     popular: false
   });
@@ -65,7 +65,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
         price: initialValues.price?.toString() || '',
         quantity: initialValues.quantity?.toString() || '20',
         category: initialValues.category || '',
-        image: initialValues.image || '',
+        imageUrl: initialValues.imageUrl || '',
         status: initialValues.status || 'active',
         popular: initialValues.popular || false
       });
@@ -87,7 +87,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
       price: parseFloat(formData.price),
       quantity: parseInt(formData.quantity),
       category: formData.category,
-      image: formData.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400',
+      imageUrl: formData.imageUrl,
       status: formData.status,
       popular: formData.popular
     };
@@ -99,7 +99,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
         price: '',
         quantity: '20',
         category: '',
-        image: '',
+        imageUrl: '',
         status: 'active',
         popular: false
       });
@@ -219,14 +219,13 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             <Label htmlFor="imageFile">Upload Image</Label>
             <div className="flex space-x-2 items-center">
               <Input
-                id="imageFile"
+                id="imageUrl"
                 type="file"
                 accept="image/*"
                 onChange={async (e) => {
                   if (e.target.files?.[0]) {
                     const formData = new FormData();
                     formData.append("file", e.target.files[0]);
-
                     try {
                       const res = await fetch('http://localhost:8080/api/foods/upload', {
                         method: "POST",
@@ -234,9 +233,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                       });
                       const data = await res.json();
 
-                      if (data.path) {
+                      if (data.filename && data.path) {
                         // Save backend path to state
-                        handleInputChange("image", data.path);
+                        handleInputChange("imageUrl", data.filename);
                       }
                     } catch (err) {
                       console.error("Upload failed:", err);
@@ -244,14 +243,6 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                   }
                 }}
               />
-
-              {formData.image && (
-                <img
-                  src={`http://localhost:8080/api/foods/upload${formData.image}`}
-                  alt="preview"
-                  className="w-16 h-16 object-cover rounded"
-                />
-              )}
             </div>
           </div>
 
