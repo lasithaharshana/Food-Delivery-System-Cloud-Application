@@ -1,6 +1,8 @@
 // Use environment variable or default to API Gateway port
 export const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:8080';
 
+console.log("API_BASE_URL:", API_BASE_URL);
+
 // Auth endpoints through API Gateway
 export const API_AUTH_REGISTER = `${API_BASE_URL}/api/auth/register`;
 export const API_AUTH_LOGIN = `${API_BASE_URL}/api/auth/login`;

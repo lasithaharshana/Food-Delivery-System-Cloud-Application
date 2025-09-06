@@ -214,6 +214,12 @@ const RestaurantDashboard = () => {
       
       // Filter orders that have at least one item from current restaurant
       const restaurantOrders: RestaurantOrder[] = [];
+
+      // if no orders, return
+      if (allOrders.length === 0) {
+        setOrders([]);
+        return;
+      }
       
       for (const order of allOrders) {
         const hasRestaurantItem = order.orderItems.some(orderItem => {

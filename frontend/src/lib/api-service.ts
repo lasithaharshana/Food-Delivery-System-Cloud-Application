@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getStoredToken, getStoredUser } from './utils';
+import {API_FOOD_UPDATE,API_FOOD_LIST,API_ORDER_LIST} from '@/lib/api-endpoints';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -131,22 +132,38 @@ export const foodApi = {
   // Get all foods
   getAllFoods: async (): Promise<Food[]> => {
     // Explicitly include Authorization in case interceptor is bypassed
-    const response = await api.get('/foods', {
+    console.log("API end point", api.defaults.baseURL);
+    // const response = await api.get('/foods', {
+    //   headers: {
+    //     Authorization: `Bearer ${getStoredToken()}`,
+    //   },
+    // });
+    const response = await fetch(API_FOOD_LIST, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${getStoredToken()}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getStoredToken()}`,
       },
     });
-    return response.data;
+    return response.json() as Promise<Food[]>;
   },
   
   // Get foods by restaurant ID
   getFoodsByRestaurant: async (restaurantId: number): Promise<Food[]> => {
-    const response = await api.get('/foods', {
+    console.log("API end point in getFoodsByRestaurant", api.defaults.baseURL);
+    // const response = await api.get('/foods', {
+    //   headers: {
+    //     Authorization: `Bearer ${getStoredToken()}`,
+    //   },
+    // });
+    const response = await fetch(API_FOOD_LIST, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${getStoredToken()}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getStoredToken()}`,
       },
     });
-    const allFoods = response.data as Food[];
+    const allFoods = await response.json() as Food[];
     return allFoods.filter((food: Food) => food.restaurantId === restaurantId);
   },
 
@@ -166,24 +183,41 @@ export const foodApi = {
       restaurantId: user.id,
     };
 
-    const response = await api.post('/foods', payload, {
+    // const response = await api.post('/foods', payload, {
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // });
+    const response = await fetch(API_FOOD_LIST, {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
+      body: JSON.stringify(payload),
     });
-    return response.data as Food;
+    return response.json() as Promise<Food>;
+    // return response.data as Food;
   },
 };
 
 export const orderApi = {
   // Create new order
   createOrder: async (orderData: CreateOrderRequest): Promise<Order> => {
-    const response = await api.post('/order', orderData, {
+    // const response = await api.post('/order', orderData, {
+    //   headers: {
+    //     Authorization: `Bearer ${getStoredToken()}`,
+    //   },
+    // });
+    const response = await fetch(API_ORDER_LIST, {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${getStoredToken()}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getStoredToken()}`,
       },
+      body: JSON.stringify(orderData),
     });
-    return response.data;
+    return response.json() as Promise<Order>;
   },
   
   // Get all orders for current user
@@ -198,12 +232,21 @@ export const orderApi = {
 
   // Get all orders (for restaurant to filter their own)
   getAllOrders: async (): Promise<Order[]> => {
-    const response = await api.get('/order', {
+    // const response = await api.get('/order', {
+    //   headers: {
+    //     Authorization: `Bearer ${getStoredToken()}`,
+    //   },
+    // });
+    const response = await fetch(API_ORDER_LIST, {
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${getStoredToken()}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getStoredToken()}`,
       },
     });
-    return response.data;
+    return response.json() as Promise<Order[]>;
+    //
+    // return response.data;
   },
 
   // Update order status
@@ -213,12 +256,20 @@ export const orderApi = {
     cost?: number;
     orderItems?: { id: number; foodId: number; quantity: number; }[];
   }): Promise<Order> => {
-    const response = await api.put(`/order/${orderId}`, updateData, {
+    // const response = await api.put(`/order/${orderId}`, updateData, {
+    //   headers: {
+    //     Authorization: `Bearer ${getStoredToken()}`,
+    //   },
+    // });
+    const response = await fetch(`${API_ORDER_LIST}/${orderId}`, {
+      method: 'PUT',
       headers: {
-        Authorization: `Bearer ${getStoredToken()}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getStoredToken()}`,
       },
+      body: JSON.stringify(updateData),
     });
-    return response.data;
+    return response.json() as Promise<Order>;
   },
 };
 
