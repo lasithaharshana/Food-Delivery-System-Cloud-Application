@@ -2,11 +2,17 @@ package com.deliverysystem.apigateway.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.core.io.ByteArrayResource;
 
 import java.util.Enumeration;
+import java.util.Map;
 
 
 @Service
@@ -58,6 +64,52 @@ public class ProxyService {
                 headers,
                 HttpStatus.SERVICE_UNAVAILABLE
             );
+        }
+    }
+    
+    // Handle file upload for multipart data
+    public ResponseEntity<Map<String, String>> proxyFileUpload(MultipartFile file, String serviceType) {
+        try {
+            String targetServiceUrl = getServiceUrl(serviceType);
+            String targetUrl = targetServiceUrl + "/api/foods/upload";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            
+            // Create multipart body
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+            
+            HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+            
+            // Use ParameterizedTypeReference for proper generic type handling
+            ParameterizedTypeReference<Map<String, String>> responseType = new ParameterizedTypeReference<Map<String, String>>() {};
+            ResponseEntity<Map<String, String>> response = restTemplate.exchange(
+                targetUrl, 
+                HttpMethod.POST, 
+                entity, 
+                responseType
+            );
+            
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.putAll(response.getHeaders());
+            return new ResponseEntity<>(response.getBody(), responseHeaders, response.getStatusCode());
+            
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            HttpHeaders errorHeaders = new HttpHeaders();
+            errorHeaders.putAll(ex.getResponseHeaders());
+            Map<String, String> errorBody = Map.of("error", ex.getResponseBodyAsString());
+            return new ResponseEntity<>(errorBody, errorHeaders, ex.getStatusCode());
+        } catch (Exception e) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            Map<String, String> errorBody = Map.of("error", "File upload failed", "message", e.getMessage());
+            return new ResponseEntity<>(errorBody, headers, HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
     

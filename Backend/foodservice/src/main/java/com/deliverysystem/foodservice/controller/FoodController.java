@@ -190,25 +190,82 @@ public class FoodController {
     }
 
     private static final String UPLOAD_DIR = "/uploads";
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"};
+    
     @PostMapping("/upload")
+    @Operation(summary = "Upload food image", description = "Upload an image file for a food item")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid file or file too large"),
+            @ApiResponse(responseCode = "500", description = "File upload failed")
+    })
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
+            // Validate file
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Please select a file to upload"));
+            }
+            
+            // Check file size
+            if (file.getSize() > MAX_FILE_SIZE) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "File size must be less than 5MB"));
+            }
+            
+            // Check file extension
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Invalid filename"));
+            }
+            
+            boolean validExtension = false;
+            String lowercaseFilename = originalFilename.toLowerCase();
+            for (String ext : ALLOWED_EXTENSIONS) {
+                if (lowercaseFilename.endsWith(ext)) {
+                    validExtension = true;
+                    break;
+                }
+            }
+            
+            if (!validExtension) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Only image files are allowed (jpg, jpeg, png, gif, webp)"));
+            }
+            
+            // Create upload directory if it doesn't exist
             File dir = new File(UPLOAD_DIR);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
 
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            // Generate unique filename to avoid conflicts
+            String fileName = System.currentTimeMillis() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9.]", "_");
             Path path = Paths.get(UPLOAD_DIR, fileName);
+            
+            // Write file to disk
             Files.write(path, file.getBytes());
+            
+            logger.info("File uploaded successfully: {}", fileName);
 
             // Return path to store in DB
             String filePath = "/uploads/" + fileName;
-            return ResponseEntity.ok(Map.of("path", filePath));
+            return ResponseEntity.ok(Map.of(
+                "path", filePath,
+                "filename", fileName,
+                "message", "File uploaded successfully"
+            ));
 
         } catch (IOException e) {
+            logger.error("File upload failed: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "File upload failed"));
+                    .body(Map.of("error", "File upload failed: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error during file upload: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Unexpected error occurred"));
         }
     }
 
