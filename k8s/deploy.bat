@@ -52,11 +52,20 @@ kubectl apply -f apigateway.yaml
 echo  Waiting for API Gateway to be ready...
 kubectl wait --for=condition=ready pod -l app=apigateway -n food-delivery --timeout=300s
 
+echo  Deploying File Server...
+kubectl apply -f file-server.yaml
+
+echo  Waiting for File Server to be ready...
+kubectl wait --for=condition=ready pod -l app=file-server -n food-delivery --timeout=300s
+
 echo  Deploying Frontend...
 kubectl apply -f frontend.yaml
 
 echo  Waiting for Frontend to be ready...
 kubectl wait --for=condition=ready pod -l app=frontend -n food-delivery --timeout=300s
+
+echo  Deploying Ingress...
+kubectl apply -f ingress.yaml
 
 echo  Deployment completed!
 echo.

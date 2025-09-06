@@ -32,6 +32,25 @@ spec:
           value: "user"
         - name: SPRING_DATASOURCE_PASSWORD
           value: "password"
+        # File upload configuration
+        - name: SPRING_SERVLET_MULTIPART_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SPRING_SERVLET_MULTIPART_ENABLED
+        - name: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+        - name: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /uploads
         livenessProbe:
           httpGet:
             path: /actuator/health
@@ -55,6 +74,10 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
+      volumes:
+      - name: uploads-storage
+        persistentVolumeClaim:
+          claimName: food-uploads-pvc
 
 ---
 apiVersion: v1
