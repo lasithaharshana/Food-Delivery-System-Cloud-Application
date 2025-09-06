@@ -228,7 +228,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
                     formData.append("file", e.target.files[0]);
 
                     try {
-                      const res = await fetch('http://localhost:8080/api/files/upload', {
+                      const res = await fetch('http://localhost:8080/api/foods/upload', {
                         method: "POST",
                         body: formData,
                       });
@@ -247,7 +247,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
               {formData.image && (
                 <img
-                  src={`http://localhost:8080/api/files/upload${formData.image}`}
+                  src={`http://localhost:8080/api/foods/upload${formData.image}`}
                   alt="preview"
                   className="w-16 h-16 object-cover rounded"
                 />
